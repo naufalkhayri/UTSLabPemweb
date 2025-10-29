@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profil Pengguna | Keuanganku</title>
+  <link rel="stylesheet" href="./assets/css/profil.css">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="profil_body">
+  <header class="profil_header">
+    <h1>Profil Pengguna</h1>
+  </header>
+
+  <main class="profil_container">
+    <div class="profil_card">
+      <div class="profil_header_card">
+        <img src="https://cdn-icons-png.flaticon.com/512/1077/1077114.png" alt="Foto Profil" class="profil_foto">
+        <h2 id="nama_pengguna">Dino Fadly</h2>
+        <p class="status">Akun Aktif ✅</p>
+      </div>
+
+      <div class="profil_info">
+        <h3>Informasi Pribadi</h3>
+        <p><strong>Email:</strong> <span id="email_pengguna">dino.fadly@example.com</span></p>
+        <p><strong>Tanggal Lahir:</strong> <span id="tgl_lahir">07 November 2006</span></p>
+        <p><strong>Jenis Kelamin:</strong> <span id="gender">Laki-laki</span></p>
+        <p><strong>Alamat:</strong> <span id="alamat">Medan, Sumatera Utara</span></p>
+        <p><strong>Bergabung Sejak:</strong> <span id="bergabung">Oktober 2025</span></p>
+      </div>
+
+      <div class="profil_bio">
+        <h3>Tentang Saya</h3>
+        <p id="bio_pengguna">
+          Saya adalah pengguna aktif Keuanganku yang senang mengelola keuangan pribadi secara efisien.
+          Aplikasi ini membantu saya mencatat setiap transaksi dan mengatur pengeluaran harian dengan lebih baik.
+        </p>
+      </div>
+
+      <div class="profil_aksi">
+        <button onclick="editProfil()" class="edit_btn">✏️ Edit Profil</button>
+        <button onclick="kembali()" class="kembali_btn">← Kembali</button>
+      </div>
+    </div>
+  </main>
+
+  <footer class="profil_footer">
+    <p>© 2025 Keuanganku | <a href="#">Kebijakan Privasi</a> | <a href="#">Syarat & Ketentuan</a></p>
+  </footer>
+
+  <script>
+    // Tombol kembali ke halaman dashboard
+    function kembali() {
+      window.location.href = "dashboard.html";
+    }
+
+    // Placeholder untuk fitur edit profil
+    function editProfil() {
+      alert("Fitur edit profil akan segera hadir 😊");
+    }
+  </script>
+</body>
+</html>

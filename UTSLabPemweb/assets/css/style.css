@@ -1,0 +1,296 @@
+/* =============================== */
+/* GAYA UTAMA KEUANGANKU (TEMA HIJAU)  */
+/* =============================== */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+}
+
+body {
+  background: #f5f7fa;
+  color: #333;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* HEADER - DIUBAH KE HIJAU */
+header {
+  background: linear-gradient(135deg, #16a34a, #22c55e); /* Diubah dari biru ke hijau */
+  color: white;
+  text-align: center;
+  padding: 20px 10px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+header p {
+  font-size: 14px;
+  margin-bottom: 5px;
+}
+
+header h1 {
+  font-weight: 700;
+  font-size: 24px;
+}
+
+/* REKAP (PEMASUKAN, PENGELUARAN, SALDO) */
+.recap_box {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  margin: 20px 10px;
+  padding: 10px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.recap_box h4 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin: 8px;
+}
+
+/* TABEL TRANSAKSI */
+.list_box {
+  margin: 20px;
+}
+
+.header_list {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.header_list h2 {
+  color: #16a34a; /* Diubah dari biru ke hijau */
+  font-weight: 600;
+}
+
+.list_data {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+thead {
+  background: #16a34a; /* Diubah dari biru ke hijau */
+  color: white;
+}
+
+th, td {
+  padding: 12px;
+  text-align: center;
+}
+
+tbody tr:nth-child(even) {
+  background: #f2f2f2;
+}
+
+tbody tr:hover {
+  background: #dcfce7; /* green-100 (hover hijau muda) */
+}
+
+/* WARNA TEKS PEMASUKAN DAN PENGELUARAN */
+.pemasukan {
+  color: #2ecc71; /* Tetap hijau (sudah pas) */
+  font-weight: 600;
+}
+
+.pengeluaran {
+  color: #e74c3c; /* Tetap merah (sudah pas) */
+  font-weight: 600;
+}
+
+/* TOMBOL TAMBAH - DIUBAH KE HIJAU */
+.show_form {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 55px;
+  height: 55px;
+  border-radius: 50%;
+  border: none;
+  background: #16a34a; /* Diubah dari biru ke hijau */
+  color: white;
+  font-size: 30px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s;
+}
+
+.show_form:hover {
+  transform: scale(1.1);
+}
+
+/* POPUP / MODAL */
+.popup_area {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  justify-content: center;
+  align-items: center;
+  z-index: 200;
+}
+
+/* Ganti ke .aktif agar sesuai JS */
+.popup_area.aktif {
+  display: flex;
+}
+
+.popup {
+  background: white;
+  padding: 25px;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  animation: popupFade 0.3s ease;
+}
+
+@keyframes popupFade {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.btn_close {
+  float: right;
+  border: none;
+  background: none;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+form {
+  margin-top: 10px;
+}
+
+.option_form {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 15px;
+}
+
+.form {
+  margin: 10px 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.form label {
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.form input {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.input-group.actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.cancel, .save {
+  border: none;
+  padding: 8px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.cancel {
+  background: #ccc;
+}
+
+.save {
+  background: #16a34a; /* Diubah dari biru ke hijau */
+  color: white;
+}
+
+/* FOOTER */
+footer {
+  background: #f1f1f1;
+  text-align: center;
+  padding: 20px 10px;
+  margin-top: auto;
+  font-size: 14px;
+  color: #555;
+}
+
+footer a {
+  color: #16a34a; /* Diubah dari biru ke hijau */
+  text-decoration: none;
+}
+
+footer a:hover {
+  text-decoration: underline;
+}
+
+/* ======== TOMBOL PROFIL - DIUBAH KE HIJAU ======== */
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 10px;
+}
+
+.profil_btn {
+  background: white;
+  color: #16a34a; /* Diubah dari biru ke hijau */
+  border: 2px solid #16a34a; /* Diubah dari biru ke hijau */
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.profil_btn:hover {
+  background: #16a34a; /* Diubah dari biru ke hijau */
+  color: white;
+}
+
+
+/* RESPONSIVE */
+@media (max-width: 600px) {
+  .recap_box {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  th, td {
+    font-size: 14px;
+    padding: 8px;
+  }
+
+  .popup {
+    width: 95%;
+    padding: 15px;
+  }
+}
