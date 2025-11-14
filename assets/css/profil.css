@@ -1,17 +1,20 @@
 /* =================================================== */
-/* HALAMAN PROFIL PENGGUNA (TEMA HIJAU)      */
+/* HALAMAN PROFIL PENGGUNA (TEMA HIJAU)               */
 /* =================================================== */
-*{
+* {
   font-family: "Poppins", sans-serif;
+  box-sizing: border-box;
 }
+
 .profil_body {
-  /* Palet warna diubah dari Biru ke Hijau (sesuai index.html) */
   background: linear-gradient(135deg, #16a34a, #22c55e);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   animation: fadeIn 1s ease;
+  margin: 0;
+  padding: 0;
 }
 
 .profil_header {
@@ -50,22 +53,65 @@
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
+.profil_header_card {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.foto-container {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 15px;
+}
+
 .profil_foto {
   width: 120px;
   height: 120px;
   border-radius: 50%;
-  /* Border disesuaikan dengan warna hijau */
   border: 3px solid #16a34a;
-  margin-bottom: 10px;
   transition: transform 0.4s ease;
+  object-fit: cover;
 }
 
 .profil_foto:hover {
   transform: scale(1.05) rotate(5deg);
 }
 
+.upload-overlay {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  background: #16a34a;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  opacity: 0;
+}
+
+.foto-container:hover .upload-overlay {
+  opacity: 1;
+}
+
+.upload-btn {
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.upload-overlay:hover {
+  background: #15803d;
+  transform: scale(1.1);
+}
+
 .status {
-  color: #43a047; /* Biarkan hijau krn ini status aktif */
+  color: #43a047;
   font-weight: 600;
   margin-top: 5px;
 }
@@ -73,14 +119,17 @@
 .profil_info {
   text-align: left;
   margin-top: 20px;
-  padding: 10px 20px;
-  background: #f5f7fa; /* Warna netral */
+  padding: 15px 20px;
+  background: #f5f7fa;
   border-radius: 10px;
   transition: background 0.3s ease;
 }
 
+.profil_info:hover {
+  background: #e8f5e9;
+}
+
 .profil_info h3 {
-  /* Warna info diubah ke hijau */
   color: #16a34a;
   font-size: 18px;
   margin-bottom: 10px;
@@ -90,21 +139,20 @@
 
 .profil_info p {
   font-size: 15px;
-  margin: 6px 0;
+  margin: 8px 0;
+  line-height: 1.5;
 }
 
 .profil_bio {
   margin-top: 20px;
   text-align: left;
-  /* Latar bio diubah ke hijau muda */
-  background: #f0fdf4; /* green-50 dari Tailwind */
+  background: #f0fdf4;
   padding: 15px;
   border-radius: 10px;
   animation: fadeIn 1.5s ease;
 }
 
 .profil_bio h3 {
-  /* Warna bio diubah ke hijau */
   color: #16a34a;
   margin-bottom: 10px;
 }
@@ -119,27 +167,29 @@
   display: flex;
   justify-content: space-around;
   margin-top: 25px;
+  gap: 15px;
 }
 
 .edit_btn, .kembali_btn {
   border: none;
-  padding: 10px 20px;
+  padding: 12px 25px;
   border-radius: 25px;
   cursor: pointer;
   font-weight: 600;
   transition: all 0.3s ease;
+  flex: 1;
+  max-width: 180px;
 }
 
 .edit_btn {
-  /* Tombol diubah ke hijau */
   background: #16a34a;
   color: white;
 }
 
 .edit_btn:hover {
-  /* Hover diubah ke hijau tua */
-  background: #15803d; /* green-700 dari Tailwind */
+  background: #15803d;
   transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .kembali_btn {
@@ -157,4 +207,215 @@
   color: white;
   padding: 20px;
   font-size: 14px;
+}
+
+/* Modal Styles */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  animation: fadeIn 0.3s ease;
+  overflow: auto; /* Memungkinkan scroll pada modal backdrop */
+}
+
+.modal-content {
+  background-color: white;
+  margin: 5% auto;
+  padding: 30px;
+  border-radius: 15px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 85vh; /* Membatasi tinggi maksimal */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.4s ease;
+  position: relative;
+  overflow-y: auto; /* Memungkinkan scroll pada konten modal */
+}
+
+.close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  cursor: pointer;
+  transition: color 0.3s;
+  z-index: 1001; /* Pastikan tombol close di atas konten */
+}
+
+.close:hover {
+  color: #16a34a;
+}
+
+.modal-content h2 {
+  color: #16a34a;
+  margin-bottom: 20px;
+  text-align: center;
+  position: sticky;
+  top: 0;
+  background: white;
+  padding: 10px 0;
+  z-index: 1;
+}
+
+/* Form container dengan scroll */
+.modal-form {
+  max-height: calc(85vh - 150px); /* Tinggi maksimal untuk form */
+  overflow-y: auto; /* Scroll pada form jika diperlukan */
+  padding-right: 5px; /* Ruang untuk scrollbar */
+}
+
+/* Custom scrollbar untuk modal */
+.modal-form::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal-form::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.modal-form::-webkit-scrollbar-thumb {
+  background: #16a34a;
+  border-radius: 10px;
+}
+
+.modal-form::-webkit-scrollbar-thumb:hover {
+  background: #15803d;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #333;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 12px 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: border 0.3s;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: #16a34a;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.2);
+}
+
+.form-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  margin-top: 25px;
+  position: sticky;
+  bottom: 0;
+  background: white;
+  padding: 10px 0;
+  border-top: 1px solid #eee;
+}
+
+.save_btn, .cancel_btn {
+  border: none;
+  padding: 12px 25px;
+  border-radius: 25px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  flex: 1;
+}
+
+.save_btn {
+  background: #16a34a;
+  color: white;
+}
+
+.save_btn:hover {
+  background: #15803d;
+  transform: scale(1.05);
+}
+
+.cancel_btn {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.cancel_btn:hover {
+  background: #e2e8f0;
+  transform: scale(1.05);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideDown {
+  from { transform: translateY(-30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+  .profil_card {
+    padding: 25px 20px;
+  }
+  
+  .profil_aksi {
+    flex-direction: column;
+  }
+  
+  .edit_btn, .kembali_btn {
+    max-width: 100%;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+  }
+  
+  .modal-content {
+    margin: 10% auto;
+    padding: 20px;
+    max-height: 90vh;
+  }
+  
+  .modal-form {
+    max-height: calc(90vh - 120px);
+  }
+}
+
+/* Untuk layar yang sangat kecil */
+@media (max-height: 600px) {
+  .modal-content {
+    margin: 2% auto;
+    max-height: 96vh;
+  }
+  
+  .modal-form {
+    max-height: calc(96vh - 120px);
+  }
 }

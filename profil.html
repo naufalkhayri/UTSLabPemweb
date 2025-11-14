@@ -4,8 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Profil Pengguna | Keuanganku</title>
-  <link rel="stylesheet" href="./assets/css/profil.css">
-  
+  <link rel="stylesheet" href="profil.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -18,9 +17,21 @@
   <main class="profil_container">
     <div class="profil_card">
       <div class="profil_header_card">
-        <img src="https://cdn-icons-png.flaticon.com/512/1077/1077114.png" alt="Foto Profil" class="profil_foto">
+        <div class="foto-container">
+          <img src="https://cdn-icons-png.flaticon.com/512/1077/1077114.png" alt="Foto Profil" class="profil_foto" id="foto_profil">
+          <div class="upload-overlay">
+            <label for="upload_foto" class="upload-btn">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+            </label>
+            <input type="file" id="upload_foto" accept="image/*" style="display: none;">
+          </div>
+        </div>
         <h2 id="nama_pengguna">Dino Fadly</h2>
-        <p class="status">Akun Aktif </p>
+        <p class="status">Akun Aktif</p>
       </div>
 
       <div class="profil_info">
@@ -41,26 +52,193 @@
       </div>
 
       <div class="profil_aksi">
-        <button onclick="editProfil()" class="edit_btn"> Edit Profil</button>
+        <button onclick="editProfil()" class="edit_btn">Edit Profil</button>
         <button onclick="kembali()" class="kembali_btn">← Kembali</button>
       </div>
     </div>
   </main>
 
+  <!-- Modal Edit Profil -->
+  <div id="modal_edit" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2>Edit Profil</h2>
+      <div class="modal-form">
+        <form id="form_edit_profil">
+          <div class="form-group">
+            <label for="edit_nama">Nama Lengkap</label>
+            <input type="text" id="edit_nama" required>
+          </div>
+          <div class="form-group">
+            <label for="edit_email">Email</label>
+            <input type="email" id="edit_email" required>
+          </div>
+          <div class="form-group">
+            <label for="edit_tgl_lahir">Tanggal Lahir</label>
+            <input type="date" id="edit_tgl_lahir" required>
+          </div>
+          <div class="form-group">
+            <label for="edit_gender">Jenis Kelamin</label>
+            <select id="edit_gender" required>
+              <option value="Laki-laki">Laki-laki</option>
+              <option value="Perempuan">Perempuan</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="edit_alamat">Alamat</label>
+            <textarea id="edit_alamat" rows="3" required></textarea>
+          </div>
+          <div class="form-group">
+            <label for="edit_bio">Tentang Saya</label>
+            <textarea id="edit_bio" rows="4" required></textarea>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="save_btn">Simpan Perubahan</button>
+            <button type="button" class="cancel_btn" onclick="tutupModal()">Batal</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <footer class="profil_footer">
-    <p>© 2025 Keuanganku </p>
+    <p>© 2025 Keuanganku</p>
   </footer>
 
   <script>
-    // Tombol kembali ke halaman dashboard
+    // Fungsi untuk kembali ke dashboard
     function kembali() {
       window.location.href = "dashboard.html";
     }
 
-    // Placeholder untuk fitur edit profil
+    // Fungsi untuk membuka modal edit profil
     function editProfil() {
-      alert("Fitur edit profil akan segera hadir 😊");
+      // Ambil data dari elemen HTML
+      document.getElementById('edit_nama').value = document.getElementById('nama_pengguna').textContent;
+      document.getElementById('edit_email').value = document.getElementById('email_pengguna').textContent;
+      document.getElementById('edit_tgl_lahir').value = formatDateForInput(document.getElementById('tgl_lahir').textContent);
+      document.getElementById('edit_gender').value = document.getElementById('gender').textContent;
+      document.getElementById('edit_alamat').value = document.getElementById('alamat').textContent;
+      document.getElementById('edit_bio').value = document.getElementById('bio_pengguna').textContent;
+      
+      // Tampilkan modal
+      document.getElementById('modal_edit').style.display = 'block';
+      document.body.style.overflow = 'hidden'; // Mencegah scroll di body
     }
+
+    // Fungsi untuk menutup modal
+    function tutupModal() {
+      document.getElementById('modal_edit').style.display = 'none';
+      document.body.style.overflow = 'auto'; // Mengembalikan scroll di body
+    }
+
+    // Fungsi untuk memformat tanggal dari teks ke format input date
+    function formatDateForInput(dateText) {
+      const months = {
+        'Januari': '01', 'Februari': '02', 'Maret': '03', 'April': '04',
+        'Mei': '05', 'Juni': '06', 'Juli': '07', 'Agustus': '08',
+        'September': '09', 'Oktober': '10', 'November': '11', 'Desember': '12'
+      };
+      
+      const parts = dateText.split(' ');
+      if (parts.length === 3) {
+        const day = parts[0].padStart(2, '0');
+        const month = months[parts[1]];
+        const year = parts[2];
+        return `${year}-${month}-${day}`;
+      }
+      return '';
+    }
+
+    // Fungsi untuk memformat tanggal dari format input date ke teks
+    function formatDateForDisplay(dateString) {
+      const months = [
+        'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+      ];
+      
+      const date = new Date(dateString);
+      const day = date.getDate();
+      const month = months[date.getMonth()];
+      const year = date.getFullYear();
+      return `${day} ${month} ${year}`;
+    }
+
+    // Event listener untuk form edit profil
+    document.getElementById('form_edit_profil').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      // Update data di halaman
+      document.getElementById('nama_pengguna').textContent = document.getElementById('edit_nama').value;
+      document.getElementById('email_pengguna').textContent = document.getElementById('edit_email').value;
+      document.getElementById('tgl_lahir').textContent = formatDateForDisplay(document.getElementById('edit_tgl_lahir').value);
+      document.getElementById('gender').textContent = document.getElementById('edit_gender').value;
+      document.getElementById('alamat').textContent = document.getElementById('edit_alamat').value;
+      document.getElementById('bio_pengguna').textContent = document.getElementById('edit_bio').value;
+      
+      // Simpan ke localStorage
+      const userData = {
+        nama: document.getElementById('edit_nama').value,
+        email: document.getElementById('edit_email').value,
+        tgl_lahir: document.getElementById('edit_tgl_lahir').value,
+        gender: document.getElementById('edit_gender').value,
+        alamat: document.getElementById('edit_alamat').value,
+        bio: document.getElementById('edit_bio').value
+      };
+      localStorage.setItem('userProfile', JSON.stringify(userData));
+      
+      // Tutup modal
+      tutupModal();
+      
+      // Tampilkan notifikasi
+      alert('Profil berhasil diperbarui!');
+    });
+
+    // Event listener untuk upload foto
+    document.getElementById('upload_foto').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          document.getElementById('foto_profil').src = event.target.result;
+          // Simpan foto ke localStorage
+          localStorage.setItem('userPhoto', event.target.result);
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // Event listener untuk menutup modal saat klik di luar konten
+    window.addEventListener('click', function(event) {
+      const modal = document.getElementById('modal_edit');
+      if (event.target === modal) {
+        tutupModal();
+      }
+    });
+
+    // Event listener untuk tombol close modal
+    document.querySelector('.close').addEventListener('click', tutupModal);
+
+    // Muat data dari localStorage saat halaman dimuat
+    window.addEventListener('DOMContentLoaded', function() {
+      // Muat data profil
+      const savedProfile = localStorage.getItem('userProfile');
+      if (savedProfile) {
+        const userData = JSON.parse(savedProfile);
+        document.getElementById('nama_pengguna').textContent = userData.nama;
+        document.getElementById('email_pengguna').textContent = userData.email;
+        document.getElementById('tgl_lahir').textContent = formatDateForDisplay(userData.tgl_lahir);
+        document.getElementById('gender').textContent = userData.gender;
+        document.getElementById('alamat').textContent = userData.alamat;
+        document.getElementById('bio_pengguna').textContent = userData.bio;
+      }
+      
+      // Muat foto profil
+      const savedPhoto = localStorage.getItem('userPhoto');
+      if (savedPhoto) {
+        document.getElementById('foto_profil').src = savedPhoto;
+      }
+    });
   </script>
 </body>
 </html>
