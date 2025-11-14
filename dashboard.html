@@ -62,6 +62,11 @@
               <input type="date" id="dateInput" name="date" required>
             </div>
 
+            <div class="form">
+              <label for="buktiInput">Bukti Transaksi:</label>
+              <input type="file" id="buktiInput" accept="image/*">
+            </div>
+
             <div class="input-group actions">
               <button type="button" class="cancel" onclick="Modal.close()">Batal</button>
               <button type="submit" class="save">Simpan</button>
@@ -104,6 +109,18 @@
 
     <!-- TOMBOL TAMBAH -->
     <button class="show_form" id="showForm" onclick="Modal.open()">+</button>
+  <div class="popup_area" id="popupBuktiArea">
+  <div class="popupblur" onclick="Bukti.close()"></div>
+  <div class="popup" style="max-width:350px;">
+    <button class="btn_close" onclick="Bukti.close()">&#x2715;</button>
+    <h2>Bukti Transaksi</h2>
+    <img id="previewBukti" style="width:100%;border-radius:10px;margin-bottom:15px">
+    <button class="save" onclick="Bukti.gantiBukti()">Ganti Bukti</button>
+    <input type="file" id="inputGantiBukti" accept="image/*" style="display:none;">
+  </div>
+</div>
+
+
   </main>
 
   <!-- BAGIAN FOOTER -->

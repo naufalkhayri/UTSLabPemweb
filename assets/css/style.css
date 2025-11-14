@@ -276,6 +276,20 @@ footer a:hover {
   color: white;
 }
 
+/* Popup bukti */
+#popupBuktiArea {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  justify-content: center;
+  align-items: center;
+  z-index: 300;
+}
+
+#popupBuktiArea.aktif {
+  display: flex;
+}
 
 /* RESPONSIVE */
 @media (max-width: 600px) {
