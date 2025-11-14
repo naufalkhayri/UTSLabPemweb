@@ -121,7 +121,90 @@
   <script src="./assets/js/main.js"></script>
  
  
- 
+ <!-- Small Pie Chart -->
+<style>
+  /* sesuaikan ukuran di sini */
+  #chartPengeluaran {
+    width: 350px !important;   /* ubah angka ini kalau mau lebih kecil/besar */
+    height: 350px !important;  /* ubah angka ini kalau mau lebih kecil/besar */
+    display: block;
+    margin: 12px auto;
+  }
+  /* container supaya rapi */
+  .chart-wrap {
+    width: 300px;
+    margin: 6px auto;
+    text-align: center;
+  }
+</style>
+
+<div class="chart-wrap">
+  <canvas id="chartPengeluaran"></canvas>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  // Baca data dari localStorage sesuai main.js kamu
+  const data = JSON.parse(localStorage.getItem("transaksi")) || [];
+
+  // Kumpulkan total per kategori (menggunakan keterangan sebagai kategori)
+  const kategoriMap = {};
+  data.forEach(t => {
+    const kategori = (t.keterangan || "Lainnya").trim();
+    const jumlah = Math.abs(Number(t.jumlah)) || 0;
+    if (!kategoriMap[kategori]) kategoriMap[kategori] = 0;
+    kategoriMap[kategori] += jumlah;
+  });
+
+  const labels = Object.keys(kategoriMap);
+  const values = Object.values(kategoriMap);
+
+  // Kalau kosong, jangan coba render
+  if (!labels.length) {
+    // opsi: tampilkan teks kecil bahwa belum ada data
+    const wrap = document.querySelector('.chart-wrap');
+    if (wrap) {
+      wrap.innerHTML = '<small>Tidak ada data transaksi</small>';
+    }
+    return;
+  }
+
+  // Ambil elemen canvas
+  const canvas = document.getElementById("chartPengeluaran");
+  // Pastikan canvas punya context
+  const ctx = canvas.getContext("2d");
+
+  // Hapus chart lama kalau ada (mencegah duplikasi saat reload)
+  if (canvas._chartInstance) {
+    canvas._chartInstance.destroy();
+  }
+
+  // Buat chart dengan responsive = false (agar ukurannya pakai CSS di atas)
+  const chart = new Chart(ctx, {
+    type: "pie",
+    data: {
+      labels: labels,
+      datasets: [{
+        data: values,
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: false,
+      plugins: {
+        legend: {
+          position: "bottom",
+          labels: { boxWidth: 10, padding: 8 }
+        }
+      }
+    }
+  });
+
+  // Simpan instance supaya bisa dihancurkan kalau di-refresh ulang
+  canvas._chartInstance = chart;
+});
+</script>
+
 
 
   
