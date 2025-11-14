@@ -16,7 +16,7 @@ function perbaruiTanggalWaktu() {
 setInterval(perbaruiTanggalWaktu, 1000);
 perbaruiTanggalWaktu();
 
-// ⚙️ Pengendali Modal (Pop-up)
+// ⚙️ Modal
 const Modal = {
   open() {
     document.querySelector(".popup_area").classList.add("aktif");
@@ -26,7 +26,7 @@ const Modal = {
   },
 };
 
-// 💾 Penyimpanan Data di Local Storage
+// 💾 Local Storage
 const Penyimpanan = {
   ambil() {
     return JSON.parse(localStorage.getItem("transaksi")) || [];
@@ -51,19 +51,11 @@ const Transaksi = {
   },
 
   pemasukan() {
-    let totalMasuk = 0;
-    Transaksi.semua.forEach(t => {
-      if (t.jumlah > 0) totalMasuk += t.jumlah;
-    });
-    return totalMasuk;
+    return Transaksi.semua.filter(t => t.jumlah > 0).reduce((a, b) => a + b.jumlah, 0);
   },
 
   pengeluaran() {
-    let totalKeluar = 0;
-    Transaksi.semua.forEach(t => {
-      if (t.jumlah < 0) totalKeluar += t.jumlah;
-    });
-    return totalKeluar;
+    return Transaksi.semua.filter(t => t.jumlah < 0).reduce((a, b) => a + b.jumlah, 0);
   },
 
   saldo() {
@@ -71,14 +63,13 @@ const Transaksi = {
   }
 };
 
-// 🧾 Manipulasi Tabel di Halaman
+// 🧾 Manipulasi Tabel
 const DOM = {
   wadahTabel: document.querySelector("#data-table tbody"),
 
   tambahTransaksi(transaksi, index) {
     const tr = document.createElement("tr");
     tr.innerHTML = DOM.isiBarisTransaksi(transaksi, index);
-    tr.dataset.index = index;
     DOM.wadahTabel.appendChild(tr);
   },
 
@@ -93,31 +84,22 @@ const DOM = {
       <td>${transaksi.keterangan}</td>
       <td class="${kelasCSS}">${jumlahFormat}</td>
       <td>${transaksi.tanggal}</td>
-      <td><button onclick="Transaksi.hapus(${index})">🗑️</button></td>
+      <td>
+        <button onclick="Transaksi.hapus(${index})">🗑️</button>
+        <button onclick="Bukti.lihat(${index})">🖼️</button>
+      </td>
     `;
   },
 
   perbaruiRingkasan() {
     document.getElementById("incomeDisplay").textContent =
-      "Total Pemasukan: " +
-      Transaksi.pemasukan().toLocaleString("id-ID", {
-        style: "currency",
-        currency: "IDR",
-      });
+      "Total Pemasukan: " + Transaksi.pemasukan().toLocaleString("id-ID", { style: "currency", currency: "IDR" });
 
     document.getElementById("expenseDisplay").textContent =
-      "Total Pengeluaran: " +
-      Transaksi.pengeluaran().toLocaleString("id-ID", {
-        style: "currency",
-        currency: "IDR",
-      });
+      "Total Pengeluaran: " + Transaksi.pengeluaran().toLocaleString("id-ID", { style: "currency", currency: "IDR" });
 
     document.getElementById("totalDisplay").textContent =
-      "Saldo Akhir: " +
-      Transaksi.saldo().toLocaleString("id-ID", {
-        style: "currency",
-        currency: "IDR",
-      });
+      "Saldo Akhir: " + Transaksi.saldo().toLocaleString("id-ID", { style: "currency", currency: "IDR" });
   },
 
   hapusSemuaTransaksi() {
@@ -125,46 +107,62 @@ const DOM = {
   }
 };
 
-// 🧮 Formulir Tambah Transaksi
+// 📤 Form Tambah Transaksi (dengan upload bukti)
 const Form = {
   description: document.getElementById("description"),
   amount: document.getElementById("amount"),
   date: document.getElementById("dateInput"),
+  bukti: document.getElementById("buktiInput"), // <input type="file" id="buktiInput">
 
   ambilNilai() {
     return {
       keterangan: Form.description.value,
       jumlah: Form.amount.value,
       tanggal: Form.date.value,
+      bukti: Form.bukti.files[0] || null
     };
   },
 
   validasi() {
     const { keterangan, jumlah, tanggal } = Form.ambilNilai();
-    if (keterangan.trim() === "" || jumlah.trim() === "" || tanggal.trim() === "") {
+    if (!keterangan.trim() || !jumlah.trim() || !tanggal.trim()) {
       throw new Error("Mohon isi semua kolom data transaksi!");
     }
   },
 
-  formatData() {
-    let { keterangan, jumlah, tanggal } = Form.ambilNilai();
+  async formatData() {
+    let { keterangan, jumlah, tanggal, bukti } = Form.ambilNilai();
     jumlah = Number(jumlah);
-    const [tahun, bulan, hari] = tanggal.split("-");
-    tanggal = `${hari}/${bulan}/${tahun}`;
-    return { keterangan, jumlah, tanggal };
+
+    // Format tanggal
+    const [y, m, d] = tanggal.split("-");
+    tanggal = `${d}/${m}/${y}`;
+
+    // Jika ada bukti, convert ke base64
+    let buktiBase64 = null;
+    if (bukti) {
+      buktiBase64 = await new Promise(resolve => {
+        const reader = new FileReader();
+        reader.onload = e => resolve(e.target.result);
+        reader.readAsDataURL(bukti);
+      });
+    }
+
+    return { keterangan, jumlah, tanggal, bukti: buktiBase64 };
   },
 
   hapusIsi() {
     Form.description.value = "";
     Form.amount.value = "";
     Form.date.value = "";
+    Form.bukti.value = "";
   },
 
-  submit(event) {
+  async submit(event) {
     event.preventDefault();
     try {
       Form.validasi();
-      const transaksi = Form.formatData();
+      const transaksi = await Form.formatData();
       Transaksi.tambah(transaksi);
       Form.hapusIsi();
       Modal.close();
@@ -174,7 +172,47 @@ const Form = {
   }
 };
 
-// ⚡ Jalannya Aplikasi
+// 📸 Popup Bukti Transaksi
+const Bukti = {
+  _index: null,
+
+  lihat(index) {
+    const data = Transaksi.semua[index];
+    if (!data.bukti) return alert("Tidak ada bukti untuk transaksi ini.");
+
+    document.getElementById("previewBukti").src = data.bukti;
+    document.getElementById("popupBuktiArea").classList.add("aktif");
+    Bukti._index = index;
+  },
+
+  close() {
+    document.getElementById("popupBuktiArea").classList.remove("aktif");
+  },
+
+  gantiBukti() {
+    document.getElementById("inputGantiBukti").click();
+  }
+};
+
+// Ganti bukti transaksi
+document.getElementById("inputGantiBukti").addEventListener("change", function () {
+  const file = this.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    const base64 = e.target.result;
+    const index = Bukti._index;
+
+    Transaksi.semua[index].bukti = base64;
+    Penyimpanan.simpan(Transaksi.semua);
+
+    document.getElementById("previewBukti").src = base64;
+  };
+  reader.readAsDataURL(file);
+});
+
+// ⚡ Jalankan Aplikasi
 const Aplikasi = {
   mulai() {
     Transaksi.semua.forEach(DOM.tambahTransaksi);
@@ -191,5 +229,5 @@ const Aplikasi = {
 Aplikasi.mulai();
 
 function bukaProfil() {
-    window.location.href = "profil.html"; // arahkan ke halaman profil
-  }
+  window.location.href = "profil.html";
+}
