@@ -1,0 +1,160 @@
+/* =================================================== */
+/* HALAMAN PROFIL PENGGUNA (TEMA HIJAU)      */
+/* =================================================== */
+*{
+  font-family: "Poppins", sans-serif;
+}
+.profil_body {
+  /* Palet warna diubah dari Biru ke Hijau (sesuai index.html) */
+  background: linear-gradient(135deg, #16a34a, #22c55e);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  animation: fadeIn 1s ease;
+}
+
+.profil_header {
+  text-align: center;
+  color: white;
+  padding: 30px 10px;
+  font-size: 1.8rem;
+  letter-spacing: 1px;
+  font-weight: 600;
+  animation: slideDown 0.8s ease;
+}
+
+.profil_container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 30px;
+  flex: 1;
+}
+
+.profil_card {
+  background: white;
+  border-radius: 20px;
+  padding: 35px 30px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+  text-align: center;
+  transform: translateY(20px);
+  animation: slideUp 0.9s ease forwards;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.profil_card:hover {
+  transform: translateY(0);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.profil_foto {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  /* Border disesuaikan dengan warna hijau */
+  border: 3px solid #16a34a;
+  margin-bottom: 10px;
+  transition: transform 0.4s ease;
+}
+
+.profil_foto:hover {
+  transform: scale(1.05) rotate(5deg);
+}
+
+.status {
+  color: #43a047; /* Biarkan hijau krn ini status aktif */
+  font-weight: 600;
+  margin-top: 5px;
+}
+
+.profil_info {
+  text-align: left;
+  margin-top: 20px;
+  padding: 10px 20px;
+  background: #f5f7fa; /* Warna netral */
+  border-radius: 10px;
+  transition: background 0.3s ease;
+}
+
+.profil_info h3 {
+  /* Warna info diubah ke hijau */
+  color: #16a34a;
+  font-size: 18px;
+  margin-bottom: 10px;
+  border-bottom: 2px solid #16a34a;
+  display: inline-block;
+}
+
+.profil_info p {
+  font-size: 15px;
+  margin: 6px 0;
+}
+
+.profil_bio {
+  margin-top: 20px;
+  text-align: left;
+  /* Latar bio diubah ke hijau muda */
+  background: #f0fdf4; /* green-50 dari Tailwind */
+  padding: 15px;
+  border-radius: 10px;
+  animation: fadeIn 1.5s ease;
+}
+
+.profil_bio h3 {
+  /* Warna bio diubah ke hijau */
+  color: #16a34a;
+  margin-bottom: 10px;
+}
+
+.profil_bio p {
+  color: #444;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.profil_aksi {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 25px;
+}
+
+.edit_btn, .kembali_btn {
+  border: none;
+  padding: 10px 20px;
+  border-radius: 25px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.edit_btn {
+  /* Tombol diubah ke hijau */
+  background: #16a34a;
+  color: white;
+}
+
+.edit_btn:hover {
+  /* Hover diubah ke hijau tua */
+  background: #15803d; /* green-700 dari Tailwind */
+  transform: scale(1.05);
+}
+
+.kembali_btn {
+  background: #ccc;
+}
+
+.kembali_btn:hover {
+  background: #aaa;
+  transform: scale(1.05);
+}
+
+.profil_footer {
+  background: rgba(255, 255, 255, 0.1);
+  text-align: center;
+  color: white;
+  padding: 20px;
+  font-size: 14px;
+}
