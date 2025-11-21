@@ -119,6 +119,18 @@ h2 {
   border-radius: 15px;
   padding: 20px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.list_box::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: #16a34a;
 }
 
 .header_list {
@@ -135,11 +147,22 @@ h2 {
   font-weight: 600;
   font-size: 24px;
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header_list h2::before {
+  content: '📋';
+  font-size: 20px;
 }
 
 .list_data {
   overflow-x: auto;
   border-radius: 10px;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
 }
 
 table {
@@ -148,7 +171,6 @@ table {
   background: white;
   border-radius: 10px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 thead {
@@ -440,42 +462,309 @@ form {
   box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
 }
 
-/* =============================== */
-/* STYLE UNTUK PIE CHART BERWARNA */
-/* =============================== */
+/* CHART CONTROLS */
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 15px;
+}
 
-.chart-section {
+.chart-controls {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.chart-controls select {
+  padding: 8px 12px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  background: white;
+  font-size: 14px;
+  min-width: 200px;
+  cursor: pointer;
+}
+
+.chart-controls select:focus {
+  outline: none;
+  border-color: #16a34a;
+}
+
+/* Responsive chart controls */
+@media (max-width: 768px) {
+  .chart-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .chart-controls {
+    justify-content: center;
+  }
+  
+  .chart-controls select {
+    min-width: 150px;
+    flex: 1;
+  }
+}
+
+/* CHART CONTAINER - SAMA PERSIS DENGAN LIST BOX */
+.chart-container {
   margin: 20px;
   background: white;
   border-radius: 15px;
-  padding: 25px;
+  padding: 20px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  text-align: center;
+  position: relative;
+  overflow: hidden;
 }
 
-.chart-section h2 {
+.chart-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: #16a34a;
+}
+
+.chart-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.chart-header h2 {
   color: #16a34a;
-  font-size: 22px;
   font-weight: 600;
+  font-size: 24px;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.chart-header h2::before {
+  content: '📊';
+  font-size: 20px;
+}
+
+.chart-controls {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.chart-controls select {
+  padding: 8px 12px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  background: white;
+  font-size: 14px;
+  min-width: 200px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.chart-controls select:focus {
+  outline: none;
+  border-color: #16a34a;
 }
 
 .chart-wrap {
-  width: 100%;
-  height: 400px;
-  margin: 0 auto;
+  background: white;
+  border-radius: 10px;
   padding: 15px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  height: 400px;
   position: relative;
-  min-height: 400px;
 }
 
-/* Style untuk chart canvas - PENTING! */
-#chartPengeluaran {
-  width: 100% !important;
-  height: 100% !important;
-  display: block !important;
-  margin: 0 auto;
+/* No Data State */
+.no-data-box {
+  text-align: center;
+  padding: 40px 20px;
+  color: #6b7280;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 2px dashed #d1d5db;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
+
+.no-data-box i {
+  font-size: 48px;
+  margin-bottom: 15px;
+  color: #d1d5db;
+}
+
+.no-data-box p {
+  font-size: 16px;
+  margin: 0 0 10px 0;
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+.no-data-box small {
+  font-size: 14px;
+  color: #9ca3af;
+  line-height: 1.4;
+}
+
+/* Responsive Design untuk Chart */
+@media (max-width: 768px) {
+  .chart-container {
+    margin: 15px;
+    padding: 15px;
+  }
+  
+  .chart-header {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .chart-controls {
+    justify-content: center;
+  }
+  
+  .chart-controls select {
+    min-width: 150px;
+    flex: 1;
+  }
+  
+  .chart-wrap {
+    height: 350px;
+    padding: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .chart-container {
+    padding: 15px;
+    margin: 10px;
+  }
+  
+  .chart-header h2 {
+    font-size: 20px;
+  }
+  
+  .chart-wrap {
+    height: 300px;
+  }
+  
+  .chart-controls {
+    flex-direction: column;
+  }
+  
+  .chart-controls select {
+    min-width: 100%;
+  }
+}
+
+/* No Data State */
+.no-data-box {
+  text-align: center;
+  padding: 60px 20px;
+  color: #6b7280;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 2px dashed #d1d5db;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.3s ease;
+}
+
+.no-data-box:hover {
+  border-color: #16a34a;
+  background: #f0fdf4;
+}
+
+.no-data-box i {
+  font-size: 64px;
+  margin-bottom: 20px;
+  color: #d1d5db;
+  transition: all 0.3s ease;
+}
+
+.no-data-box:hover i {
+  color: #16a34a;
+  transform: scale(1.1);
+}
+
+.no-data-box p {
+  font-size: 18px;
+  margin: 0 0 10px 0;
+  color: #9ca3af;
+  font-weight: 600;
+}
+
+.no-data-box small {
+  font-size: 14px;
+  color: #9ca3af;
+  line-height: 1.4;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .chart-container {
+    padding: 20px;
+    border-radius: 15px;
+  }
+  
+  .chart-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 15px;
+  }
+  
+  .chart-controls {
+    justify-content: center;
+  }
+  
+  .chart-controls select {
+    min-width: 100%;
+  }
+  
+  .chart-wrap {
+    height: 400px;
+    padding: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .chart-container {
+    padding: 15px;
+    margin: 10px;
+  }
+  
+  .chart-header h2 {
+    font-size: 20px;
+  }
+  
+  .chart-wrap {
+    height: 350px;
+  }
+}
+
+
+
+
+
 
 /* Style untuk state tidak ada data */
 .no-data {

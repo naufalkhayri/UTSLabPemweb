@@ -155,22 +155,39 @@
       </div>
     </section>
 
-    <!-- CHART SECTION -->
-    <!-- CHART SECTION -->
+<!-- CHART SECTION - SAMA PERSIS DENGAN LIST BOX -->
 <section class="chart-section">
-  <h2>Statistik Pengeluaran</h2>
-  <div class="chart-wrap">
-
-    <!-- CANVAS CHART -->
-    <canvas id="chartPengeluaran"></canvas>
-
-    <!-- NO DATA MESSAGE (TAMBAHAN BARU) -->
-    <div class="no-data-box" style="display:none; text-align:center; padding:40px;">
-      <i class="fas fa-chart-pie" style="font-size:48px; color:#ccc;"></i>
-      <p>Belum ada data pengeluaran</p>
-      <small>Tambahkan transaksi pengeluaran untuk melihat statistik</small>
+  <div class="chart-container">
+    <div class="chart-header">
+      <h2>Statistik Keuangan</h2>
     </div>
+    
+    <div class="chart-controls">
+      <select id="chartTypeSelector">
+        <option value="pie">Pie Chart - Distribusi Pengeluaran</option>
+        <option value="line">Line Chart - Trend Bulanan</option>
+        <option value="bar">Bar Chart - Perbandingan Bulanan</option>
+        <option value="doughnut">Donut Chart - Distribusi Pengeluaran</option>
+      </select>
+      <select id="timeRangeSelector">
+        <option value="all">Semua Waktu</option>
+        <option value="3months">3 Bulan Terakhir</option>
+        <option value="6months">6 Bulan Terakhir</option>
+        <option value="1year">1 Tahun Terakhir</option>
+      </select>
+    </div>
+    
+    <div class="chart-wrap">
+      <!-- CANVAS UTAMA -->
+      <canvas id="mainChart"></canvas>
 
+      <!-- NO DATA MESSAGE -->
+      <div class="no-data-box" style="display:none;">
+        <i class="fas fa-chart-pie"></i>
+        <p>Belum ada data transaksi</p>
+        <small>Tambahkan transaksi untuk melihat statistik</small>
+      </div>
+    </div>
   </div>
 </section>
 
