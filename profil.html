@@ -3,17 +3,32 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Prospero | Profil Diri</title>
+  <title>Simanja | Profil Diri</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="./assets/css/profil.css">
 </head>
 <body>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <!-- Brand di ujung kiri -->
+      <div class="nav-brand-container">
+        <a href="#" class="nav-brand">
+          Profil Diri
+        </a>
+      </div>
+
+      <!-- Tombol kembali di ujung kanan -->
+      <div class="nav-back-container">
+        <a href="dashboard.html" class="nav-back-btn">
+          <i class="fas fa-arrow-left"></i>
+          Kembali
+        </a>
+      </div>
+    </div>
+  </nav>
+
   <div class="container">
-    <!-- Header -->
-    <header class="header">
-      <h1>Profil Diri</h1>
-      <div class="divider"></div>
-    </header>
 
     <!-- Main Content - Semua dalam satu container -->
     <main class="main-content">
@@ -39,6 +54,14 @@
           <span class="info-label">JENIS KELAMIN</span>
           <span class="info-value" id="gender">Laki-laki</span>
         </div>
+
+        <!-- Edit Button di Kanan -->
+        <div class="edit-button-container">
+          <button class="edit-btn" id="editProfileBtn">
+            <i class="fas fa-edit"></i>
+            Edit Profil
+          </button>
+        </div>
       </div>
 
       <!-- Profile Details Grid -->
@@ -60,9 +83,9 @@
               <span class="info-value" id="tgl_lahir">07 November 2006</span>
             </div>
             <div class="info-item">
-                <span class="info-label">ALAMAT</span>
-                <span class="info-value" id="alamat">Medan, Sumatera Utara</span>
-              </div>
+              <span class="info-label">ALAMAT</span>
+              <span class="info-value" id="alamat">Medan, Sumatera Utara</span>
+            </div>
           </div>
         </section>
 
@@ -83,18 +106,6 @@
           </div>
         </section>
       </div>
-
-      <!-- Action Buttons -->
-      <div class="action-buttons">
-        <button class="edit-btn" onclick="editProfil()">
-          <i class="fas fa-edit"></i>
-          Edit Profil
-        </button>
-        <button class="back-btn" onclick="kembali()">
-          <i class="fas fa-arrow-left"></i>
-          Kembali
-        </button>
-      </div>
     </main>
   </div>
 
@@ -103,7 +114,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <h2>Edit Profil</h2>
-        <span class="close">&times;</span>
+        <span class="close" id="closeModal">&times;</span>
       </div>
       
       <div class="modal-form">
@@ -140,137 +151,18 @@
             <label for="edit_alamat">Alamat</label>
             <input type="text" id="edit_alamat" required>
           </div>
+          
+          <div class="modal-actions">
+            <div class="form-actions">
+              <button type="submit" class="save_btn">Simpan Perubahan</button>
+              <button type="button" class="cancel_btn" id="cancelEdit">Batal</button>
+            </div>
+          </div>
         </form>
-      </div>
-      
-      <div class="modal-actions">
-        <div class="form-actions">
-          <button type="submit" form="form_edit_profil" class="save_btn">Simpan Perubahan</button>
-          <button type="button" class="cancel_btn" onclick="tutupModal()">Batal</button>
-        </div>
       </div>
     </div>
   </div>
 
-  <script>
-    // JavaScript code tetap sama seperti sebelumnya
-    function kembali() {
-      window.location.href = "dashboard.html";
-    }
-
-    function editProfil() {
-      document.getElementById('edit_nama').value = document.getElementById('nama_pengguna').textContent;
-      document.getElementById('edit_email').value = document.getElementById('email_pengguna').textContent;
-      document.getElementById('edit_handphone').value = document.getElementById('handphone').textContent;
-      document.getElementById('edit_tgl_lahir').value = formatDateForInput(document.getElementById('tgl_lahir').textContent);
-      document.getElementById('edit_gender').value = document.getElementById('gender').textContent;
-      document.getElementById('edit_alamat').value = document.getElementById('alamat').textContent;
-      
-      document.getElementById('modal_edit').style.display = 'block';
-      document.body.style.overflow = 'hidden';
-    }
-
-    function tutupModal() {
-      document.getElementById('modal_edit').style.display = 'none';
-      document.body.style.overflow = 'auto';
-    }
-
-    function formatDateForInput(dateText) {
-      const months = {
-        'Januari': '01', 'Februari': '02', 'Maret': '03', 'April': '04',
-        'Mei': '05', 'Juni': '06', 'Juli': '07', 'Agustus': '08',
-        'September': '09', 'Oktober': '10', 'November': '11', 'Desember': '12'
-      };
-      
-      const parts = dateText.split(' ');
-      if (parts.length === 3) {
-        const day = parts[0].padStart(2, '0');
-        const month = months[parts[1]];
-        const year = parts[2];
-        return `${year}-${month}-${day}`;
-      }
-      return '';
-    }
-
-    document.getElementById('form_edit_profil').addEventListener('submit', function(e) {
-      e.preventDefault();
-      
-      document.getElementById('nama_pengguna').textContent = document.getElementById('edit_nama').value;
-      document.getElementById('nama_lengkap').textContent = document.getElementById('edit_nama').value;
-      document.getElementById('email_pengguna').textContent = document.getElementById('edit_email').value;
-      document.getElementById('handphone').textContent = document.getElementById('edit_handphone').value;
-      document.getElementById('tgl_lahir').textContent = formatDateForDisplay(document.getElementById('edit_tgl_lahir').value);
-      document.getElementById('gender').textContent = document.getElementById('edit_gender').value;
-      document.getElementById('jenis_kelamin').textContent = document.getElementById('edit_gender').value;
-      document.getElementById('alamat').textContent = document.getElementById('edit_alamat').value;
-      
-      const userData = {
-        nama: document.getElementById('edit_nama').value,
-        email: document.getElementById('edit_email').value,
-        handphone: document.getElementById('edit_handphone').value,
-        tgl_lahir: document.getElementById('edit_tgl_lahir').value,
-        gender: document.getElementById('edit_gender').value,
-        alamat: document.getElementById('edit_alamat').value
-      };
-      localStorage.setItem('userProfile', JSON.stringify(userData));
-      
-      tutupModal();
-      alert('Profil berhasil diperbarui!');
-    });
-
-    function formatDateForDisplay(dateString) {
-      const months = [
-        'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
-      ];
-      
-      const date = new Date(dateString);
-      const day = date.getDate();
-      const month = months[date.getMonth()];
-      const year = date.getFullYear();
-      return `${day} ${month} ${year}`;
-    }
-
-    document.getElementById('upload_foto').addEventListener('change', function(e) {
-      const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function(event) {
-          document.getElementById('foto_profil').src = event.target.result;
-          localStorage.setItem('userPhoto', event.target.result);
-        };
-        reader.readAsDataURL(file);
-      }
-    });
-
-    window.addEventListener('click', function(event) {
-      const modal = document.getElementById('modal_edit');
-      if (event.target === modal) {
-        tutupModal();
-      }
-    });
-
-    document.querySelector('.close').addEventListener('click', tutupModal);
-
-    window.addEventListener('DOMContentLoaded', function() {
-      const savedProfile = localStorage.getItem('userProfile');
-      if (savedProfile) {
-        const userData = JSON.parse(savedProfile);
-        document.getElementById('nama_pengguna').textContent = userData.nama;
-        document.getElementById('nama_lengkap').textContent = userData.nama;
-        document.getElementById('email_pengguna').textContent = userData.email;
-        document.getElementById('handphone').textContent = userData.handphone;
-        document.getElementById('tgl_lahir').textContent = formatDateForDisplay(userData.tgl_lahir);
-        document.getElementById('gender').textContent = userData.gender;
-        document.getElementById('jenis_kelamin').textContent = userData.gender;
-        document.getElementById('alamat').textContent = userData.alamat;
-      }
-      
-      const savedPhoto = localStorage.getItem('userPhoto');
-      if (savedPhoto) {
-        document.getElementById('foto_profil').src = savedPhoto;
-      }
-    });
-  </script>
+  <script src="./assets/js/profil.js"></script>
 </body>
 </html>
