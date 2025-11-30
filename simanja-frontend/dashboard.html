@@ -155,42 +155,41 @@
       </div>
     </section>
 
-<!-- CHART SECTION - SAMA PERSIS DENGAN LIST BOX -->
-<section class="chart-section">
-  <div class="chart-container">
-    <div class="chart-header">
-      <h2>Statistik Keuangan</h2>
-    </div>
-    
-    <div class="chart-controls">
-      <select id="chartTypeSelector">
-        <option value="pie">Pie Chart - Distribusi Pengeluaran</option>
-        <option value="line">Line Chart - Trend Bulanan</option>
-        <option value="bar">Bar Chart - Perbandingan Bulanan</option>
-        <option value="doughnut">Donut Chart - Distribusi Pengeluaran</option>
-      </select>
-      <select id="timeRangeSelector">
-        <option value="all">Semua Waktu</option>
-        <option value="3months">3 Bulan Terakhir</option>
-        <option value="6months">6 Bulan Terakhir</option>
-        <option value="1year">1 Tahun Terakhir</option>
-      </select>
-    </div>
-    
-    <div class="chart-wrap">
-      <!-- CANVAS UTAMA -->
-      <canvas id="mainChart"></canvas>
+    <!-- CHART SECTION - DIPERBAIKI DENGAN FILTER WAKTU LENGKAP -->
+    <section class="chart-section">
+      <div class="chart-container">
+        <div class="chart-header">
+          <h2>Statistik Keuangan</h2>
+        </div>
+        
+        <div class="chart-controls">
+          <select id="chartTypeSelector">
+            <option value="pie">Pie Chart - Distribusi Pengeluaran</option>
+            <option value="line">Line Chart - Trend Bulanan</option>
+            <option value="bar">Bar Chart - Perbandingan Bulanan</option>
+            <option value="doughnut">Donut Chart - Distribusi Pengeluaran</option>
+          </select>
+          <select id="timeRangeSelector">
+            <option value="all">Semua Waktu</option>
+            <option value="3months">3 Bulan Terakhir</option>
+            <option value="6months">6 Bulan Terakhir</option>
+            <option value="1year">1 Tahun Terakhir</option>
+          </select>
+        </div>
+        
+        <div class="chart-wrap">
+          <!-- CANVAS UTAMA -->
+          <canvas id="mainChart"></canvas>
 
-      <!-- NO DATA MESSAGE -->
-      <div class="no-data-box" style="display:none;">
-        <i class="fas fa-chart-pie"></i>
-        <p>Belum ada data transaksi</p>
-        <small>Tambahkan transaksi untuk melihat statistik</small>
+          <!-- NO DATA MESSAGE -->
+          <div class="no-data-box" style="display:none;">
+            <i class="fas fa-chart-pie"></i>
+            <p>Belum ada data transaksi</p>
+            <small>Tambahkan transaksi untuk melihat statistik</small>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
-</section>
-
+    </section>
 
     <!-- TOMBOL TAMBAH -->
     <button class="show_form" id="showForm">+</button>
@@ -205,10 +204,10 @@
         <button class="save">Ganti Bukti</button>
         <input type="file" id="inputGantiBukti" accept="image/*" style="display:none;">
       </div>
-    </d             iv>
+    </div>
   </main>
 
-  <!-- BAGIAN FOOTER -->
+  <!-- BAGIAN FOOTER - DIPERBAIKI DENGAN TOMBOL RESET -->
   <footer>
     <h3>Keuanganku</h3>
     <h4>Aplikasi Pengelola Keuangan Pribadi</h4>
@@ -219,7 +218,6 @@
     </p>
   </footer>
 
-  <!-- JAVASCRIPT -->
   <script src="./assets/js/main.js"></script>
 </body>
 </html>

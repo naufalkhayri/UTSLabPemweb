@@ -57,9 +57,13 @@
 
         <!-- Edit Button di Kanan -->
         <div class="edit-button-container">
-          <button class="edit-btn" id="editProfileBtn">
+          <button class="edit-btn" id="editProfileBtn" style="margin-right: 10px;">
             <i class="fas fa-edit"></i>
             Edit Profil
+          </button>
+          <button class="edit-btn" id="ubahPasswordBtn" style="background: #3b82f6;">
+            <i class="fas fa-key"></i>
+            Ubah Password
           </button>
         </div>
       </div>
@@ -156,6 +160,45 @@
             <div class="form-actions">
               <button type="submit" class="save_btn">Simpan Perubahan</button>
               <button type="button" class="cancel_btn" id="cancelEdit">Batal</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Ubah Password -->
+  <div id="modal_ubah_password" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Ubah Password</h2>
+        <span class="close" id="closePasswordModal">&times;</span>
+      </div>
+      
+      <div class="modal-form">
+        <form id="form_ubah_password">
+          <div class="form-group">
+            <label for="password_lama">Password Lama</label>
+            <input type="password" id="password_lama" required>
+            <p id="passwordLamaError" class="error-message hidden"></p>
+          </div>
+          
+          <div class="form-group">
+            <label for="password_baru">Password Baru</label>
+            <input type="password" id="password_baru" required>
+            <p id="passwordBaruError" class="error-message hidden"></p>
+          </div>
+          
+          <div class="form-group">
+            <label for="konfirmasi_password">Konfirmasi Password Baru</label>
+            <input type="password" id="konfirmasi_password" required>
+            <p id="konfirmasiPasswordError" class="error-message hidden"></p>
+          </div>
+          
+          <div class="modal-actions">
+            <div class="form-actions">
+              <button type="submit" class="save_btn">Ubah Password</button>
+              <button type="button" class="cancel_btn" id="cancelUbahPassword">Batal</button>
             </div>
           </div>
         </form>
