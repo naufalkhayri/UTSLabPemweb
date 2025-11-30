@@ -1,943 +1,1022 @@
-/* ============================== */
-/*     LOGIKA APLIKASI KEUANGANKU */
-/* ============================== */
+    /* ============================== */
+    /*     LOGIKA APLIKASI KEUANGANKU */
+    /* ============================== */
 
-// 📅 Tanggal & Waktu Real-Time
-function perbaruiTanggalWaktu() {
-  const sekarang = new Date();
-  document.getElementById("date").textContent = sekarang.toLocaleDateString("id-ID", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-  document.getElementById("time").textContent = sekarang.toLocaleTimeString("id-ID");
-}
+    // 📅 Tanggal & Waktu Real-Time
+    function perbaruiTanggalWaktu() {
+      const sekarang = new Date();
+      document.getElementById("date").textContent = sekarang.toLocaleDateString("id-ID", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+      document.getElementById("time").textContent = sekarang.toLocaleTimeString("id-ID");
+    }
 
-// ⚙️ Modal
-const Modal = {
-  open() {
-    document.querySelector(".popup_area").classList.add("aktif");
-  },
-  close() {
-    document.querySelector(".popup_area").classList.remove("aktif");
-  },
-};
-
-// 💾 Local Storage
-const Penyimpanan = {
-  ambil() {
-    return JSON.parse(localStorage.getItem("transaksi")) || [];
-  },
-  simpan(dataTransaksi) {
-    localStorage.setItem("transaksi", JSON.stringify(dataTransaksi));
-  },
-};
-
-/* ============================== */
-/*     MULTI-CHART SYSTEM         */
-/* ============================== */
-
-console.log("=== MULTI-CHART SYSTEM DIMUAT ===");
-
-let currentChart = null;
-let chartData = {};
-
-// Fungsi untuk mengumpulkan dan memproses data
-function processChartData() {
-    const transactions = JSON.parse(localStorage.getItem("transaksi")) || [];
-    const timeRange = document.getElementById('timeRangeSelector')?.value || 'all';
-    
-    console.log("🔄 Memproses data chart...", { transactionCount: transactions.length, timeRange });
-
-    // Filter berdasarkan waktu
-    const filteredTransactions = filterByTimeRange(transactions, timeRange);
-    
-    // Data untuk berbagai jenis chart
-    chartData = {
-        // Pie/Donut Chart Data (Pengeluaran per kategori)
-        pieData: processPieData(filteredTransactions),
-        
-        // Line/Bar Chart Data (Trend bulanan)
-        trendData: processTrendData(filteredTransactions),
-        
-        // Summary data
-        summary: {
-            totalTransactions: filteredTransactions.length,
-            totalIncome: filteredTransactions.filter(t => t.jumlah > 0)
-                .reduce((sum, t) => sum + t.jumlah, 0),
-            totalExpense: Math.abs(filteredTransactions.filter(t => t.jumlah < 0)
-                .reduce((sum, t) => sum + t.jumlah, 0))
-        }
+    // ⚙️ Modal
+    const Modal = {
+      open() {
+        document.querySelector(".popup_area").classList.add("aktif");
+      },
+      close() {
+        document.querySelector(".popup_area").classList.remove("aktif");
+      },
     };
-    
-    return chartData;
-}
 
-// Filter berdasarkan range waktu
-// Filter berdasarkan range waktu - TAMBAH DEBUGGING
-function filterByTimeRange(transactions, range) {
-    console.log("🔍 Filtering transactions by range:", range);
-    console.log("📅 Total transactions before filter:", transactions.length);
-    
-    if (range === 'all') {
-        console.log("✅ No filter applied, using all transactions");
-        return transactions;
-    }
-    
-    const now = new Date();
-    let cutoffDate = new Date();
-    
-    switch(range) {
-        case '3months':
-            cutoffDate.setMonth(now.getMonth() - 3);
-            break;
-        case '6months':
-            cutoffDate.setMonth(now.getMonth() - 6);
-            break;
-        case '1year':
-            cutoffDate.setFullYear(now.getFullYear() - 1);
-            break;
-        default:
-            console.log("⚠️ Unknown range, using all transactions");
-            return transactions;
-    }
-    
-    console.log("📅 Cutoff date:", cutoffDate.toLocaleDateString('id-ID'));
-    
-    const filteredTransactions = transactions.filter(transaction => {
+    // 🔐 API Helper Functions
+    const API = {
+      baseURL: 'http://localhost:3000/api',
+      
+      async getHeaders(isFormData = false) {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Token tidak ditemukan. Silakan login kembali.');
+        }
+        
+        const headers = {
+          'Authorization': `Bearer ${token}`
+        };
+        
+        if (!isFormData) {
+          headers['Content-Type'] = 'application/json';
+        }
+        
+        return headers;
+      },
+
+      async get(url) {
         try {
-            const [day, month, year] = transaction.tanggal.split('/');
-            const transactionDate = new Date(year, month - 1, day);
-            const isInRange = transactionDate >= cutoffDate;
-            
-            if (!isInRange) {
-                console.log("❌ Transaction filtered out:", {
-                    date: transaction.tanggal,
-                    amount: transaction.jumlah,
-                    description: transaction.keterangan
-                });
-            }
-            
-            return isInRange;
+          const response = await fetch(`${this.baseURL}${url}`, {
+            headers: await this.getHeaders()
+          });
+          
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(errorText || `HTTP error! status: ${response.status}`);
+          }
+          
+          return response.json();
         } catch (error) {
-            console.error("❌ Error parsing date:", transaction.tanggal, error);
-            return false;
+          console.error('❌ API GET Error:', error);
+          throw error;
         }
-    });
-    
-    console.log("✅ Transactions after filtering:", filteredTransactions.length);
-    return filteredTransactions;
-}
+      },
 
-// Process data untuk Pie/Donut Chart
-function processPieData(transactions) {
-    const kategoriMap = {};
-    
-    transactions.forEach((t) => {
-        if (Number(t.jumlah) < 0) {
-            const kategori = (t.keterangan || "Lainnya").trim();
-            const jumlah = Math.abs(Number(t.jumlah)) || 0;
-            
-            if (!kategoriMap[kategori]) kategoriMap[kategori] = 0;
-            kategoriMap[kategori] += jumlah;
+      async post(url, data, isFormData = false) {
+        try {
+          const options = {
+            method: 'POST',
+            headers: await this.getHeaders(isFormData)
+          };
+          
+          if (isFormData) {
+            options.body = data;
+          } else {
+            options.body = JSON.stringify(data);
+          }
+          
+          console.log('🔍 DEBUG - API POST:', { url, isFormData });
+          
+          const response = await fetch(`${this.baseURL}${url}`, options);
+          
+          if (!response.ok) {
+            const errorText = await response.text();
+            let errorData;
+            try {
+              errorData = JSON.parse(errorText);
+            } catch {
+              errorData = { error: errorText };
+            }
+            throw new Error(errorData.error || errorData.details || `HTTP error! status: ${response.status}`);
+          }
+          
+          return response.json();
+        } catch (error) {
+          console.error('❌ API POST Error:', error);
+          throw error;
         }
-    });
+      },
 
-    const labels = Object.keys(kategoriMap);
-    const values = Object.values(kategoriMap);
-    
-    return { labels, values };
-}
+      async delete(url) {
+        try {
+          const response = await fetch(`${this.baseURL}${url}`, {
+            method: 'DELETE',
+            headers: await this.getHeaders()
+          });
+          
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(errorText || `HTTP error! status: ${response.status}`);
+          }
+          
+          return response.json();
+        } catch (error) {
+          console.error('❌ API DELETE Error:', error);
+          throw error;
+        }
+      }
+    };
 
-// Process data untuk Line/Bar Chart (Trend bulanan)
-function processTrendData(transactions) {
-    const monthlyData = {};
-    
-    transactions.forEach((t) => {
-        const [day, month, year] = t.tanggal.split('/');
-        const monthYear = `${month}/${year}`;
-        const key = `${year}-${month.padStart(2, '0')}`; // Untuk sorting
+    // 💰 Data Transaksi
+    const Transaksi = {
+      semua: [],
+
+      async load() {
+        try {
+          console.log('🔍 Loading transactions...');
+          const data = await API.get('/transactions?limit=1000');
+          this.semua = data.transactions || [];
+          console.log('✅ Transactions loaded:', this.semua.length);
+          return this.semua;
+        } catch (error) {
+          console.error('❌ Error loading transactions:', error);
+          showNotification('Gagal memuat data transaksi', 'error');
+          this.semua = [];
+          return [];
+        }
+      },
+
+      async tambah(transaksiFormData) {
+        try {
+          console.log('🔍 Adding transaction...');
+          const response = await API.post('/transactions', transaksiFormData, true);
+          console.log('✅ Transaction added:', response);
+          
+          // Reload data terbaru dari server
+          await this.load();
+          return response;
+        } catch (error) {
+          console.error('❌ Error adding transaction:', error);
+          throw error;
+        }
+      },
+
+      async hapus(id) {
+        try {
+          console.log('🔍 Deleting transaction:', id);
+          const response = await API.delete(`/transactions/${id}`);
+          
+          // Update local data
+          this.semua = this.semua.filter(t => t.id !== id);
+          return response;
+        } catch (error) {
+          console.error('❌ Error deleting transaction:', error);
+          throw error;
+        }
+      },
+
+      async getRingkasan() {
+        try {
+          return await API.get('/transactions/summary');
+        } catch (error) {
+          console.error('❌ Error loading summary:', error);
+          // Fallback ke perhitungan lokal
+          return {
+            totalIncome: this.pemasukan(),
+            totalExpense: this.pengeluaran(),
+            balance: this.saldo()
+          };
+        }
+      },
+
+      pemasukan() {
+        return this.semua
+          .filter(t => t.jenis === 'income')
+          .reduce((total, t) => total + parseFloat(t.jumlah), 0);
+      },
+
+      pengeluaran() {
+        return this.semua
+          .filter(t => t.jenis === 'expense')
+          .reduce((total, t) => total + parseFloat(t.jumlah), 0);
+      },
+
+      saldo() {
+        return this.pemasukan() - this.pengeluaran();
+      },
+
+      // 🆕 FILTER BERDASARKAN RENTANG WAKTU
+      filterByTimeRange(timeRange) {
+        const now = new Date();
+        let startDate;
         
-        if (!monthlyData[key]) {
-            monthlyData[key] = {
-                label: `Bulan ${month}/${year}`,
-                income: 0,
-                expense: 0,
-                sortKey: key
+        switch(timeRange) {
+          case '3months':
+            startDate = new Date(now.getFullYear(), now.getMonth() - 3, now.getDate());
+            break;
+          case '6months':
+            startDate = new Date(now.getFullYear(), now.getMonth() - 6, now.getDate());
+            break;
+          case '1year':
+            startDate = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
+            break;
+          default: // 'all'
+            return this.semua;
+        }
+        
+        return this.semua.filter(transaksi => {
+          const transaksiDate = new Date(transaksi.tanggal);
+          return transaksiDate >= startDate;
+        });
+      },
+
+      // 🆕 DATA UNTUK CHART PERTAMA (PERBANDINGAN PEMASUKAN vs PENGELUARAN)
+      getDataForMainChart(timeRange = 'all') {
+        const filteredTransactions = this.filterByTimeRange(timeRange);
+        const pemasukan = filteredTransactions
+          .filter(t => t.jenis === 'income')
+          .reduce((total, t) => total + parseFloat(t.jumlah), 0);
+        const pengeluaran = filteredTransactions
+          .filter(t => t.jenis === 'expense')
+          .reduce((total, t) => total + parseFloat(t.jumlah), 0);
+        
+        return {
+          labels: ['Pemasukan', 'Pengeluaran'],
+          datasets: [{
+            label: 'Jumlah (Rp)',
+            data: [pemasukan, pengeluaran],
+            backgroundColor: ['#3B82F6', '#EF4444'],
+            borderColor: ['#2563EB', '#DC2626'],
+            borderWidth: 2
+          }]
+        };
+      },
+
+      // 🆕 DATA UNTUK CHART KEDUA (RINCIAN PENGELUARAN BERDASARKAN KETERANGAN)
+      getDataForExpenseChart(timeRange = 'all') {
+        const filteredTransactions = this.filterByTimeRange(timeRange);
+        const pengeluaran = filteredTransactions.filter(t => t.jenis === 'expense');
+        
+        if (pengeluaran.length === 0) {
+          return null;
+        }
+        
+        // Kelompokkan berdasarkan keterangan yang dimasukkan user
+        const keteranganMap = {};
+        
+        pengeluaran.forEach(transaksi => {
+          const keterangan = transaksi.keterangan || 'Tanpa Keterangan';
+          if (!keteranganMap[keterangan]) {
+            keteranganMap[keterangan] = {
+              total: 0,
+              count: 0,
+              transactions: []
             };
+          }
+          keteranganMap[keterangan].total += parseFloat(transaksi.jumlah);
+          keteranganMap[keterangan].count += 1;
+          keteranganMap[keterangan].transactions.push(transaksi);
+        });
+        
+        // Urutkan dari yang terbesar ke terkecil
+        const sortedKeterangan = Object.entries(keteranganMap)
+          .sort(([,a], [,b]) => b.total - a.total);
+        
+        // Ambil 10 keterangan terbesar, sisanya digabung sebagai "Lainnya"
+        const topKeterangan = sortedKeterangan.slice(0, 10);
+        const lainnya = sortedKeterangan.slice(10);
+        
+        // Hitung total untuk "Lainnya"
+        let totalLainnya = 0;
+        let countLainnya = 0;
+        const transactionsLainnya = [];
+        
+        lainnya.forEach(([keterangan, data]) => {
+          totalLainnya += data.total;
+          countLainnya += data.count;
+          transactionsLainnya.push(...data.transactions);
+        });
+        
+        // Siapkan data untuk chart
+        const labels = topKeterangan.map(([keterangan]) => keterangan);
+        const data = topKeterangan.map(([, data]) => data.total);
+        
+        // Tambahkan "Lainnya" jika ada
+        if (totalLainnya > 0) {
+          labels.push('Lainnya');
+          data.push(totalLainnya);
+          keteranganMap['Lainnya'] = {
+            total: totalLainnya,
+            count: countLainnya,
+            transactions: transactionsLainnya
+          };
         }
         
-        if (t.jumlah > 0) {
-            monthlyData[key].income += t.jumlah;
+        return {
+          labels,
+          datasets: [{
+            data,
+            backgroundColor: [
+              '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
+              '#FF9F40', '#FF6384', '#C9CBCF', '#7C4DFF', '#4CAF50',
+              '#795548'
+            ],
+            borderWidth: 2,
+            borderColor: '#fff'
+          }],
+          detailData: keteranganMap
+        };
+      }
+    };
+
+    // 🧾 Manipulasi Tabel
+    const DOM = {
+      wadahTabel: document.querySelector("#data-table tbody"),
+
+      renderTransactions() {
+        this.hapusSemuaTransaksi();
+        
+        if (Transaksi.semua.length === 0) {
+          this.tampilkanPesanKosong();
+          return;
+        }
+        
+        Transaksi.semua.forEach((transaksi) => this.tambahTransaksi(transaksi));
+      },
+
+      tampilkanPesanKosong() {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td colspan="4" class="text-center py-4 text-gray-500">
+            <i class="fas fa-receipt text-3xl mb-2"></i>
+            <p>Belum ada data transaksi</p>
+            <small>Klik tombol "+" untuk menambah transaksi</small>
+          </td>
+        `;
+        this.wadahTabel.appendChild(tr);
+      },
+
+      tambahTransaksi(transaksi) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = this.isiBarisTransaksi(transaksi);
+        this.wadahTabel.appendChild(tr);
+      },
+
+      isiBarisTransaksi(transaksi) {
+        const kelasCSS = transaksi.jenis === 'income' ? "pemasukan" : "pengeluaran";
+        const jumlahFormat = new Intl.NumberFormat('id-ID', {
+          style: 'currency',
+          currency: 'IDR'
+        }).format(transaksi.jumlah);
+
+        const tanggal = new Date(transaksi.tanggal).toLocaleDateString('id-ID');
+        
+        return `
+          <td class="px-4 py-3">${transaksi.keterangan || '-'}</td>
+          <td class="px-4 py-3 ${kelasCSS}">${jumlahFormat}</td>
+          <td class="px-4 py-3">${tanggal}</td>
+          <td class="px-4 py-3">
+            <button onclick="hapusTransaksi(${transaksi.id})" class="btn-hapus">
+              <i class="fas fa-trash"></i>
+            </button>
+            ${transaksi.bukti_transaksi ? `
+              <button onclick="Bukti.lihat('${transaksi.bukti_transaksi}')" class="btn-bukti">
+                <i class="fas fa-image"></i>
+              </button>
+            ` : ''}
+          </td>
+        `;
+      },
+
+      async perbaruiRingkasan() {
+        try {
+          const ringkasan = await Transaksi.getRingkasan();
+          
+          document.getElementById("incomeDisplay").textContent = 
+            "Rp " + Math.round(ringkasan.totalIncome || 0).toLocaleString("id-ID");
+          
+          document.getElementById("expenseDisplay").textContent = 
+            "Rp " + Math.round(ringkasan.totalExpense || 0).toLocaleString("id-ID");
+          
+          document.getElementById("totalDisplay").textContent = 
+            "Rp " + Math.round(ringkasan.balance || 0).toLocaleString("id-ID");
+            
+        } catch (error) {
+          console.error('Error updating summary:', error);
+          // Fallback lokal
+          document.getElementById("incomeDisplay").textContent = "Rp " + Math.round(Transaksi.pemasukan()).toLocaleString("id-ID");
+          document.getElementById("expenseDisplay").textContent = "Rp " + Math.round(Transaksi.pengeluaran()).toLocaleString("id-ID");
+          document.getElementById("totalDisplay").textContent = "Rp " + Math.round(Transaksi.saldo()).toLocaleString("id-ID");
+        }
+      },
+
+      hapusSemuaTransaksi() {
+        if (this.wadahTabel) {
+          this.wadahTabel.innerHTML = "";
+        }
+      },
+
+      // 🆕 TAMPILKAN DETAIL PENGELUARAN
+      tampilkanDetailPengeluaran(detailData) {
+        const expenseDetails = document.getElementById('expenseDetails');
+        const detailsList = document.getElementById('detailsList');
+        
+        if (!detailData || Object.keys(detailData).length === 0) {
+          expenseDetails.style.display = 'none';
+          return;
+        }
+        
+        expenseDetails.style.display = 'block';
+        
+        // Urutkan berdasarkan total terbesar
+        const sortedDetails = Object.entries(detailData)
+          .sort(([,a], [,b]) => b.total - a.total);
+        
+        let html = '';
+        
+        sortedDetails.forEach(([keterangan, data], index) => {
+          const percentage = ((data.total / Transaksi.pengeluaran()) * 100).toFixed(1);
+          
+          html += `
+            <div class="detail-item" style="
+              display: flex; 
+              justify-content: space-between; 
+              align-items: center; 
+              padding: 12px 15px; 
+              margin-bottom: 8px; 
+              background: #f8fafc; 
+              border-radius: 8px; 
+              border-left: 4px solid ${getColorByIndex(index)};
+            ">
+              <div style="flex: 1;">
+                <div style="font-weight: 600; color: #374151; margin-bottom: 4px;">
+                  ${keterangan}
+                </div>
+                <div style="font-size: 12px; color: #6b7280;">
+                  ${data.count} transaksi
+                </div>
+              </div>
+              <div style="text-align: right;">
+                <div style="font-weight: 700; color: #ef4444; margin-bottom: 2px;">
+                  Rp ${Math.round(data.total).toLocaleString('id-ID')}
+                </div>
+                <div style="font-size: 12px; color: #6b7280;">
+                  ${percentage}%
+                </div>
+              </div>
+            </div>
+          `;
+        });
+        
+        detailsList.innerHTML = html;
+      }
+    };
+
+    // 🎨 Helper function untuk warna
+    function getColorByIndex(index) {
+      const colors = [
+        '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
+        '#FF9F40', '#FF6384', '#C9CBCF', '#7C4DFF', '#4CAF50',
+        '#795548'
+      ];
+      return colors[index % colors.length];
+    }
+
+    // 📤 Form Tambah Transaksi
+    const Form = {
+      get description() { return document.getElementById("description"); },
+      get amount() { return document.getElementById("amount"); },
+      get date() { return document.getElementById("dateInput"); },
+      get bukti() { return document.getElementById("buktiInput"); },
+
+      ambilNilai() {
+        const jenis = document.querySelector('input[name="type"]:checked').value;
+        return {
+          keterangan: this.description.value.trim(),
+          jumlah: parseFloat(this.amount.value),
+          jenis: jenis,
+          tanggal: this.date.value
+        };
+      },
+
+      validasi() {
+        const { keterangan, jumlah, tanggal } = this.ambilNilai();
+        
+        if (!keterangan) throw new Error("Keterangan harus diisi!");
+        if (isNaN(jumlah) || jumlah <= 0) throw new Error("Jumlah harus lebih dari 0!");
+        if (!tanggal) throw new Error("Tanggal harus diisi!");
+      },
+
+      buatFormData() {
+        const formData = new FormData();
+        const { keterangan, jumlah, jenis, tanggal } = this.ambilNilai();
+        
+        // Tambahkan field text
+        formData.append('keterangan', keterangan);
+        formData.append('jumlah', jumlah.toString());
+        formData.append('jenis', jenis);
+        formData.append('tanggal', tanggal);
+        
+        // Tambahkan file jika ada
+        const file = this.bukti.files[0];
+        if (file) {
+          formData.append('buktiTransaksi', file);
+        }
+        
+        console.log('🔍 FormData:', {
+          keterangan, jumlah, jenis, tanggal, 
+          hasFile: !!file
+        });
+        
+        return formData;
+      },
+
+      hapusIsi() {
+        this.description.value = "";
+        this.amount.value = "";
+        this.date.value = "";
+        this.bukti.value = "";
+        // Set default ke pengeluaran
+        document.getElementById('expenseRadio').checked = true;
+      },
+
+      async submit(event) {
+        event.preventDefault();
+        
+        const submitBtn = event.target.querySelector('.save');
+        const originalText = submitBtn.textContent;
+        
+        try {
+          console.log('🔍 Starting form submission...');
+          
+          // Validasi
+          this.validasi();
+          
+          // Loading state
+          submitBtn.textContent = 'Menyimpan...';
+          submitBtn.disabled = true;
+          
+          // Buat dan kirim FormData
+          const formData = this.buatFormData();
+          await Transaksi.tambah(formData);
+          
+          // Update UI
+          DOM.renderTransactions();
+          await DOM.perbaruiRingkasan();
+          await updateCharts();
+          
+          // Reset & close
+          this.hapusIsi();
+          Modal.close();
+          
+          showNotification('Transaksi berhasil ditambahkan!', 'success');
+          
+        } catch (error) {
+          console.error('❌ Form error:', error);
+          showNotification(error.message, 'error');
+        } finally {
+          submitBtn.textContent = originalText;
+          submitBtn.disabled = false;
+        }
+      }
+    };
+
+    // 📸 Popup Bukti Transaksi
+    const Bukti = {
+      lihat(buktiPath) {
+        const previewImg = document.getElementById("previewBukti");
+        const popup = document.getElementById("popupBuktiArea");
+        
+        if (buktiPath.startsWith('data:')) {
+          previewImg.src = buktiPath;
         } else {
-            monthlyData[key].expense += Math.abs(t.jumlah);
+          previewImg.src = `http://localhost:3000${buktiPath}`;
         }
-    });
-    
-    // Sort by date
-    const sortedMonths = Object.values(monthlyData)
-        .sort((a, b) => a.sortKey.localeCompare(b.sortKey));
-    
-    return {
-        labels: sortedMonths.map(m => m.label),
-        income: sortedMonths.map(m => m.income),
-        expense: sortedMonths.map(m => m.expense)
-    };
-}
-
-// Palette warna
-const chartColors = {
-    pie: [
-        '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD',
-        '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9', '#F8C471', '#82E0AA'
-    ],
-    income: '#3B82F6',
-    expense: '#EF4444',
-    background: 'rgba(255, 255, 255, 0.1)'
-};
-
-// Konfigurasi untuk setiap jenis chart
-const chartConfigs = {
-    pie: {
-        type: "pie",
-        data: (chartData) => ({
-            labels: chartData.pieData.labels,
-            datasets: [{
-                data: chartData.pieData.values,
-                backgroundColor: chartData.pieData.labels.map((_, index) => 
-                    chartColors.pie[index % chartColors.pie.length]
-                ),
-                borderColor: '#ffffff',
-                borderWidth: 2,
-                hoverBorderWidth: 3,
-                hoverOffset: 8
-            }]
-        }),
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: "bottom",
-                    labels: { 
-                        boxWidth: 15, 
-                        padding: 15,
-                        font: { 
-                            size: 12,
-                            family: "'Poppins', sans-serif",
-                            weight: '500'
-                        },
-                        color: '#374151',
-                        usePointStyle: true
-                    }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            const label = context.label || '';
-                            const value = context.parsed;
-                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                            const percentage = total ? Math.round((value / total) * 100) : 0;
-                            return `${label}: Rp ${value.toLocaleString('id-ID')} (${percentage}%)`;
-                        }
-                    }
-                }
-            },
-            animation: {
-                animateScale: true,
-                animateRotate: true,
-                duration: 1200
-            }
-        }
-    },
-
-    doughnut: {
-        type: "doughnut",
-        data: (chartData) => ({
-            labels: chartData.pieData.labels,
-            datasets: [{
-                data: chartData.pieData.values,
-                backgroundColor: chartData.pieData.labels.map((_, index) => 
-                    chartColors.pie[index % chartColors.pie.length]
-                ),
-                borderColor: '#ffffff',
-                borderWidth: 2,
-                hoverBorderWidth: 3,
-                hoverOffset: 8
-            }]
-        }),
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            cutout: '50%',
-            plugins: {
-                legend: {
-                    position: "bottom",
-                    labels: { 
-                        boxWidth: 15, 
-                        padding: 15,
-                        font: { 
-                            size: 12,
-                            family: "'Poppins', sans-serif",
-                            weight: '500'
-                        },
-                        color: '#374151',
-                        usePointStyle: true
-                    }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            const label = context.label || '';
-                            const value = context.parsed;
-                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                            const percentage = total ? Math.round((value / total) * 100) : 0;
-                            return `${label}: Rp ${value.toLocaleString('id-ID')} (${percentage}%)`;
-                        }
-                    }
-                }
-            },
-            animation: {
-                animateScale: true,
-                animateRotate: true,
-                duration: 1200
-            }
-        }
-    },
-
-    line: {
-        type: "line",
-        data: (chartData) => ({
-            labels: chartData.trendData.labels,
-            datasets: [
-                {
-                    label: "Pemasukan",
-                    data: chartData.trendData.income,
-                    borderColor: chartColors.income,
-                    backgroundColor: chartColors.income + '20',
-                    tension: 0.4,
-                    fill: true,
-                    borderWidth: 3
-                },
-                {
-                    label: "Pengeluaran",
-                    data: chartData.trendData.expense,
-                    borderColor: chartColors.expense,
-                    backgroundColor: chartColors.expense + '20',
-                    tension: 0.4,
-                    fill: true,
-                    borderWidth: 3
-                }
-            ]
-        }),
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: "top",
-                    labels: {
-                        font: {
-                            family: "'Poppins', sans-serif",
-                            size: 12
-                        }
-                    }
-                },
-                tooltip: {
-                    mode: 'index',
-                    intersect: false,
-                    callbacks: {
-                        label: function(context) {
-                            return `${context.dataset.label}: Rp ${context.parsed.y.toLocaleString('id-ID')}`;
-                        }
-                    }
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        callback: function(value) {
-                            return 'Rp ' + value.toLocaleString('id-ID');
-                        }
-                    }
-                }
-            },
-            interaction: {
-                intersect: false,
-                mode: 'nearest'
-            }
-        }
-    },
-
-    bar: {
-        type: "bar",
-        data: (chartData) => ({
-            labels: chartData.trendData.labels,
-            datasets: [
-                {
-                    label: "Pemasukan",
-                    data: chartData.trendData.income,
-                    backgroundColor: chartColors.income + 'CC',
-                    borderColor: chartColors.income,
-                    borderWidth: 1
-                },
-                {
-                    label: "Pengeluaran",
-                    data: chartData.trendData.expense,
-                    backgroundColor: chartColors.expense + 'CC',
-                    borderColor: chartColors.expense,
-                    borderWidth: 1
-                }
-            ]
-        }),
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: "top",
-                    labels: {
-                        font: {
-                            family: "'Poppins', sans-serif",
-                            size: 12
-                        }
-                    }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return `${context.dataset.label}: Rp ${context.parsed.y.toLocaleString('id-ID')}`;
-                        }
-                    }
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        callback: function(value) {
-                            return 'Rp ' + value.toLocaleString('id-ID');
-                        }
-                    }
-                }
-            }
-        }
-    }
-};
-
-// Fungsi utama untuk update chart
-function updateChart() {
-    console.log("🔄 Memperbarui chart...");
-    
-    const canvas = document.getElementById("mainChart");
-    const wrap = document.querySelector('.chart-wrap');
-    const noDataBox = document.querySelector('.no-data-box');
-    const chartTypeSelector = document.getElementById('chartTypeSelector');
-    const timeRangeSelector = document.getElementById('timeRangeSelector');
-
-    
-    console.log("🔍 Element check:", {
-        canvas: !!canvas,
-        wrap: !!wrap,
-        noDataBox: !!noDataBox,
-        chartTypeSelector: !!chartTypeSelector,
-        timeRangeSelector: !!timeRangeSelector,
-        timeRangeValue: timeRangeSelector ? timeRangeSelector.value : 'not found'
-    });
-    
-    if (!canvas || !wrap) {
-        console.error("❌ Canvas chart atau wrapper tidak ditemukan!");
-        return;
-    }
-
-    // Process data
-    const data = processChartData();
-    
-    // Cek apakah ada data
-    const hasData = data.summary.totalTransactions > 0;
-    
-    if (!hasData) {
-        console.log("ℹ️ Tidak ada data transaksi untuk chart");
         
-        if (currentChart) {
-            try { currentChart.destroy(); } catch(e){ /* ignore */ }
-            currentChart = null;
+        popup.classList.add("aktif");
+      },
+
+      close() {
+        document.getElementById("popupBuktiArea").classList.remove("aktif");
+      }
+    };
+
+    // 📊 Chart System - DUA CHART SEKALIGUS
+    let currentMainChart = null;
+    let currentExpenseChart = null;
+
+    async function updateCharts() {
+      await updateMainChart();
+      await updateExpenseChart();
+    }
+
+    async function updateMainChart() {
+      const canvas = document.getElementById("mainChart");
+      const noDataBox = document.querySelector('.no-data-box');
+      const chartType = document.getElementById('chartTypeSelector')?.value || 'pie';
+      const timeRange = document.getElementById('timeRangeSelector')?.value || 'all';
+      
+      if (!canvas) return;
+
+      try {
+        const chartData = Transaksi.getDataForMainChart(timeRange);
+        const hasData = chartData.datasets[0].data.some(value => value > 0);
+
+        if (!hasData) {
+          if (currentMainChart) currentMainChart.destroy();
+          canvas.style.display = "none";
+          if (noDataBox) noDataBox.style.display = "flex";
+          return;
         }
 
-        canvas.style.display = "none";
-        if (noDataBox) noDataBox.style.display = "block";
-        return;
-    }
+        canvas.style.display = "block";
+        if (noDataBox) noDataBox.style.display = "none";
 
-    // Ada data -> tampilkan chart
-    canvas.style.display = "block";
-    if (noDataBox) noDataBox.style.display = "none";
-
-    // Hapus chart lama
-    if (currentChart) {
-        try { 
-            currentChart.destroy(); 
-        } catch(e){ 
-            console.warn("Gagal destroy chart lama:", e); 
-        }
-        currentChart = null;
-    }
-
-    // Dapatkan jenis chart yang dipilih
-    const chartType = chartTypeSelector ? chartTypeSelector.value : 'pie';
-    const config = chartConfigs[chartType];
-    
-    if (!config) {
-        console.error("❌ Konfigurasi chart tidak ditemukan:", chartType);
-        return;
-    }
-
-    try {
+        // Hancurkan chart sebelumnya
+        if (currentMainChart) currentMainChart.destroy();
+        
         // Buat chart baru
-        currentChart = new Chart(canvas, {
-            type: config.type,
-            data: config.data(data),
-            options: config.options
+        currentMainChart = new Chart(canvas, {
+          type: chartType,
+          data: chartData,
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'right',
+                labels: {
+                  padding: 20,
+                  usePointStyle: true,
+                }
+              },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    const label = context.label || '';
+                    const value = context.raw || 0;
+                    return `${label}: Rp ${value.toLocaleString('id-ID')}`;
+                  }
+                }
+              }
+            },
+            scales: chartType === 'bar' ? {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  callback: function(value) {
+                    return 'Rp ' + value.toLocaleString('id-ID');
+                  }
+                }
+              }
+            } : {}
+          }
         });
         
-        console.log("✅ Chart berhasil dibuat!", { type: chartType });
-        
-    } catch (error) {
-        console.error("❌ Error membuat chart:", error);
-        if (noDataBox) {
-            noDataBox.innerHTML = '<div class="no-data"><i class="fas fa-exclamation-triangle"></i><p>Error memuat chart</p></div>';
-            noDataBox.style.display = "block";
+      } catch (error) {
+        console.error('Main chart error:', error);
+      }
+    }
+
+    async function updateExpenseChart() {
+      const canvas = document.getElementById("expenseChart");
+      const noDataBox = document.getElementById('expenseNoData');
+      const chartType = document.getElementById('expenseChartTypeSelector')?.value || 'pie';
+      const timeRange = document.getElementById('expenseTimeRangeSelector')?.value || 'all';
+      
+      if (!canvas) return;
+
+      try {
+        const chartData = Transaksi.getDataForExpenseChart(timeRange);
+
+        if (!chartData) {
+          if (currentExpenseChart) currentExpenseChart.destroy();
+          canvas.style.display = "none";
+          if (noDataBox) noDataBox.style.display = "flex";
+          DOM.tampilkanDetailPengeluaran(null);
+          return;
         }
-        canvas.style.display = "none";
-    }
-}
 
-// Event listeners untuk chart controls - DIPERBAIKI
-function initChartControls() {
-    const chartTypeSelector = document.getElementById('chartTypeSelector');
-    const timeRangeSelector = document.getElementById('timeRangeSelector');
-    
-    console.log("🔄 Inisialisasi chart controls...");
-    console.log("📊 Chart type selector:", chartTypeSelector);
-    console.log("⏰ Time range selector:", timeRangeSelector);
-    
-    if (chartTypeSelector) {
-        chartTypeSelector.addEventListener('change', function() {
-            console.log("🎯 Chart type changed to:", this.value);
-            updateChart();
+        canvas.style.display = "block";
+        if (noDataBox) noDataBox.style.display = "none";
+
+        // Hancurkan chart sebelumnya
+        if (currentExpenseChart) currentExpenseChart.destroy();
+        
+        // Buat chart baru
+        currentExpenseChart = new Chart(canvas, {
+          type: chartType,
+          data: {
+            labels: chartData.labels,
+            datasets: [chartData.datasets[0]]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'right',
+                labels: {
+                  padding: 20,
+                  usePointStyle: true,
+                  font: {
+                    size: 11
+                  }
+                }
+              },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    const label = context.label || '';
+                    const value = context.raw || 0;
+                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                    const percentage = Math.round((value / total) * 100);
+                    return `${label}: Rp ${value.toLocaleString('id-ID')} (${percentage}%)`;
+                  }
+                }
+              }
+            }
+          }
         });
-    } else {
-        console.error("❌ Chart type selector tidak ditemukan!");
+        
+        // Tampilkan detail pengeluaran
+        DOM.tampilkanDetailPengeluaran(chartData.detailData);
+        
+      } catch (error) {
+        console.error('Expense chart error:', error);
+      }
     }
-    
-    if (timeRangeSelector) {
-        timeRangeSelector.addEventListener('change', function() {
-            console.log("⏰ Time range changed to:", this.value);
-            updateChart();
-        });
-    } else {
-        console.error("❌ Time range selector tidak ditemukan!");
+
+    // 🆕 FUNGSI RESET DATA
+    async function resetData() {
+      if (confirm('Apakah Anda yakin ingin menghapus semua riwayat transaksi? Tindakan ini tidak dapat dibatalkan!')) {
+        try {
+          const submitBtn = document.querySelector('#resetData');
+          const originalText = submitBtn.textContent;
+          
+          // Loading state
+          submitBtn.textContent = 'Menghapus...';
+          submitBtn.disabled = true;
+          
+          // Hapus semua transaksi satu per satu
+          const deletePromises = Transaksi.semua.map(transaksi => 
+            API.delete(`/transactions/${transaksi.id}`)
+          );
+          
+          await Promise.all(deletePromises);
+          
+          // Reload data
+          await Transaksi.load();
+          DOM.renderTransactions();
+          await DOM.perbaruiRingkasan();
+          await updateCharts();
+          
+          showNotification('Semua riwayat transaksi berhasil dihapus!', 'success');
+          
+        } catch (error) {
+          console.error('Error resetting data:', error);
+          showNotification('Gagal menghapus data: ' + error.message, 'error');
+        } finally {
+          const submitBtn = document.querySelector('#resetData');
+          submitBtn.textContent = 'Atur Ulang';
+          submitBtn.disabled = false;
+        }
+      }
     }
-}
 
+    // Helper function untuk hapus transaksi
+    async function hapusTransaksi(id) {
+      if (confirm('Hapus transaksi ini?')) {
+        try {
+          await Transaksi.hapus(id);
+          DOM.renderTransactions();
+          await DOM.perbaruiRingkasan();
+          await updateCharts();
+          showNotification('Transaksi dihapus!', 'success');
+        } catch (error) {
+          showNotification('Gagal menghapus: ' + error.message, 'error');
+        }
+      }
+    }
 
-
-
-
-// 💰 Data Transaksi - YANG INI PERLU DITAMBAHKAN
-const Transaksi = {
-  semua: Penyimpanan.ambil(),
-
-  tambah(transaksi) {
-    Transaksi.semua.push(transaksi);
-    Penyimpanan.simpan(Transaksi.semua);
-    
-    // UPDATE SEMUA TAMPILAN LANGSUNG
-    DOM.hapusSemuaTransaksi();
-    Transaksi.semua.forEach((transaksi, index) => DOM.tambahTransaksi(transaksi, index));
-    DOM.perbaruiRingkasan();
-    
-    // UPDATE CHART LANGSUNG
-    updateChart();
-  },
-
-  hapus(index) {
-    Transaksi.semua.splice(index, 1);
-    Penyimpanan.simpan(Transaksi.semua);
-    
-    // UPDATE SEMUA TAMPILAN LANGSUNG
-    DOM.hapusSemuaTransaksi();
-    Transaksi.semua.forEach((transaksi, index) => DOM.tambahTransaksi(transaksi, index));
-    DOM.perbaruiRingkasan();
-    
-    // UPDATE CHART LANGSUNG
-    updateChart();
-  },
-
-  pemasukan() {
-    return Transaksi.semua.filter(t => t.jumlah > 0).reduce((a, b) => a + b.jumlah, 0);
-  },
-
-  pengeluaran() {
-    return Transaksi.semua.filter(t => t.jumlah < 0).reduce((a, b) => a + b.jumlah, 0);
-  },
-
-  saldo() {
-    return Transaksi.pemasukan() + Transaksi.pengeluaran();
-  }
-};
-
-// 🧾 Manipulasi Tabel
-const DOM = {
-  wadahTabel: document.querySelector("#data-table tbody"),
-
-  tambahTransaksi(transaksi, index) {
-    const tr = document.createElement("tr");
-    tr.innerHTML = DOM.isiBarisTransaksi(transaksi, index);
-    DOM.wadahTabel.appendChild(tr);
-  },
-
-  isiBarisTransaksi(transaksi, index) {
-    const kelasCSS = transaksi.jumlah > 0 ? "pemasukan" : "pengeluaran";
-    const jumlahFormat = transaksi.jumlah.toLocaleString("id-ID", {
-      style: "currency",
-      currency: "IDR",
-    });
-
-    return `
-      <td>${transaksi.keterangan}</td>
-      <td class="${kelasCSS}">${jumlahFormat}</td>
-      <td>${transaksi.tanggal}</td>
-      <td>
-        <button onclick="Transaksi.hapus(${index})">🗑️</button>
-        ${transaksi.bukti ? `<button onclick="Bukti.lihat(${index})">🖼️</button>` : ''}
-      </td>
-    `;
-  },
-
-  perbaruiRingkasan() {
-    document.getElementById("incomeDisplay").textContent =
-      "Rp " + Transaksi.pemasukan().toLocaleString("id-ID");
-
-    document.getElementById("expenseDisplay").textContent =
-      "Rp " + Math.abs(Transaksi.pengeluaran()).toLocaleString("id-ID");
-
-    document.getElementById("totalDisplay").textContent =
-      "Rp " + Transaksi.saldo().toLocaleString("id-ID");
-  },
-
-  hapusSemuaTransaksi() {
-    DOM.wadahTabel.innerHTML = "";
-  }
-};
-
-// 📤 Form Tambah Transaksi (dengan upload bukti)
-const Form = {
-  description: document.getElementById("description"),
-  amount: document.getElementById("amount"),
-  date: document.getElementById("dateInput"),
-  bukti: document.getElementById("buktiInput"),
-
-  ambilNilai() {
-    return {
-      keterangan: Form.description.value,
-      jumlah: parseFloat(Form.amount.value),
-      tanggal: Form.date.value,
-      bukti: Form.bukti.files[0] || null
+    // ⚡ Jalankan Aplikasi
+    const Aplikasi = {
+      async mulai() {
+        try {
+          console.log('🚀 Starting app...');
+          await Transaksi.load();
+          DOM.renderTransactions();
+          await DOM.perbaruiRingkasan();
+          await updateCharts();
+          console.log('✅ App started');
+        } catch (error) {
+          console.error('❌ App error:', error);
+          showNotification('Gagal memuat aplikasi', 'error');
+        }
+      }
     };
-  },
 
-  validasi() {
-    const { keterangan, jumlah, tanggal } = Form.ambilNilai();
-    if (!keterangan.trim() || isNaN(jumlah) || !tanggal.trim()) {
-      throw new Error("Mohon isi semua kolom data transaksi dengan benar!");
+    // 👤 FUNGSI PROFIL DAN NAVIGASI
+    // Fungsi untuk memuat foto profil
+    async function loadProfilePhoto() {
+      try {
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        const profileCircle = document.getElementById('profileCircle');
+        
+        if (user && user.fotoProfil) {
+          profileCircle.innerHTML = `<img src="http://localhost:3000${user.fotoProfil}" alt="Foto Profil" class="profile-image">`;
+        } else {
+          const nama = user.namaLengkap || user.username || 'User';
+          const initial = nama.charAt(0).toUpperCase();
+          profileCircle.innerHTML = `<div class="profile-default">${initial}</div>`;
+        }
+      } catch (error) {
+        console.error('Error loading profile photo:', error);
+        const profileCircle = document.getElementById('profileCircle');
+        profileCircle.innerHTML = `<div class="profile-default">U</div>`;
+      }
     }
-  },
 
-  async formatData() {
-    let { keterangan, jumlah, tanggal, bukti } = Form.ambilNilai();
-    
-    // Tentukan apakah pemasukan atau pengeluaran
-    const isExpense = document.getElementById('expenseRadio').checked;
-    if (isExpense) {
-      jumlah = -Math.abs(jumlah);
-    } else {
-      jumlah = Math.abs(jumlah);
+    // Fungsi untuk logout
+    function logout() {
+      if (confirm('Apakah Anda yakin ingin logout?')) {
+        localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('currentUser');
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('transaksi');
+        window.location.href = 'index.html';
+      }
     }
 
-    // Format tanggal
-    const [y, m, d] = tanggal.split("-");
-    tanggal = `${d}/${m}/${y}`;
+    // 🛠 Utility Functions
+    function showNotification(message, type = 'info') {
+      // Hapus notifikasi lama
+      const existing = document.querySelector('.notification');
+      if (existing) existing.remove();
 
-    // Jika ada bukti, convert ke base64
-    let buktiBase64 = null;
-    if (bukti) {
-      buktiBase64 = await new Promise(resolve => {
-        const reader = new FileReader();
-        reader.onload = e => resolve(e.target.result);
-        reader.readAsDataURL(bukti);
+      // Buat notifikasi baru
+      const notification = document.createElement('div');
+      notification.className = `notification ${type}`;
+      
+      const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️';
+      notification.innerHTML = `
+        <div class="notification-content">
+          <span class="notification-icon">${icon}</span>
+          <span class="notification-message">${message}</span>
+        </div>
+      `;
+
+      // Style notifikasi
+      if (!document.querySelector('#notification-styles')) {
+        const styles = document.createElement('style');
+        styles.id = 'notification-styles';
+        styles.textContent = `
+          .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 16px 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            z-index: 10000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            border-left: 4px solid #16a34a;
+            max-width: 400px;
+          }
+          .notification.success { border-left-color: #16a34a; }
+          .notification.error { border-left-color: #ef4444; }
+          .notification.info { border-left-color: #3b82f6; }
+          .notification.show { transform: translateX(0); }
+          .notification-content {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #374151;
+            font-weight: 500;
+          }
+        `;
+        document.head.appendChild(styles);
+      }
+
+      document.body.appendChild(notification);
+
+      // Animasi
+      setTimeout(() => notification.classList.add('show'), 100);
+      setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => notification.remove(), 300);
+      }, 3000);
+    }
+
+    // 📋 Event Listeners
+    function setupEventListeners() {
+      // Form transaction
+      const formTransaction = document.getElementById("formTransaction");
+      if (formTransaction) {
+        formTransaction.addEventListener("submit", (event) => Form.submit(event));
+      }
+      
+      // Modal buttons
+      const showFormBtn = document.getElementById("showForm");
+      const closeBtn = document.getElementById("close");
+      const cancelBtn = document.querySelector(".cancel");
+      
+      if (showFormBtn) showFormBtn.addEventListener("click", Modal.open);
+      if (closeBtn) closeBtn.addEventListener("click", Modal.close);
+      if (cancelBtn) cancelBtn.addEventListener("click", Modal.close);
+      
+      // Bukti popup
+      const buktiCloseBtn = document.querySelector("#popupBuktiArea .btn_close");
+      const buktiBlur = document.querySelector("#popupBuktiArea .popupblur");
+      
+      if (buktiCloseBtn) buktiCloseBtn.addEventListener("click", Bukti.close);
+      if (buktiBlur) buktiBlur.addEventListener("click", Bukti.close);
+      
+      // Chart controls untuk kedua chart
+      const chartTypeSelector = document.getElementById('chartTypeSelector');
+      const timeRangeSelector = document.getElementById('timeRangeSelector');
+      const expenseChartTypeSelector = document.getElementById('expenseChartTypeSelector');
+      const expenseTimeRangeSelector = document.getElementById('expenseTimeRangeSelector');
+      
+      if (chartTypeSelector) {
+        chartTypeSelector.addEventListener('change', updateMainChart);
+      }
+      
+      if (timeRangeSelector) {
+        timeRangeSelector.addEventListener('change', updateMainChart);
+      }
+      
+      if (expenseChartTypeSelector) {
+        expenseChartTypeSelector.addEventListener('change', updateExpenseChart);
+      }
+      
+      if (expenseTimeRangeSelector) {
+        expenseTimeRangeSelector.addEventListener('change', updateExpenseChart);
+      }
+      
+      // Tombol reset data
+      const resetDataBtn = document.getElementById('resetData');
+      if (resetDataBtn) {
+        resetDataBtn.addEventListener('click', resetData);
+      }
+      
+      // NAVIGASI PROFIL & DROPDOWN
+      const profileCircle = document.getElementById("profileCircle");
+      const profileDropdown = document.getElementById("profileDropdown");
+      const logoutBtn = document.getElementById("logoutBtn");
+      
+      // Toggle dropdown profil
+      if (profileCircle) {
+        profileCircle.addEventListener("click", function(e) {
+          e.stopPropagation();
+          if (profileDropdown) {
+            profileDropdown.classList.toggle('active');
+          }
+        });
+      }
+      
+      // Logout function
+      if (logoutBtn) {
+        logoutBtn.addEventListener("click", logout);
+      }
+      
+      // Close dropdown ketika klik di luar
+      document.addEventListener("click", function() {
+        const profileDropdown = document.getElementById("profileDropdown");
+        if (profileDropdown) {
+          profileDropdown.classList.remove("active");
+        }
       });
     }
 
-    return { keterangan, jumlah, tanggal, bukti: buktiBase64 };
-  },
-
-  hapusIsi() {
-    Form.description.value = "";
-    Form.amount.value = "";
-    Form.date.value = "";
-    Form.bukti.value = "";
-  },
-
-  async submit(event) {
-    event.preventDefault();
-    try {
-      Form.validasi();
-      const transaksi = await Form.formatData();
-      Transaksi.tambah(transaksi);
-      Form.hapusIsi();
-      Modal.close();
-      showNotification('Transaksi berhasil ditambahkan!', 'success');
-    } catch (error) {
-      alert(error.message);
-    }
-  }
-};
-
-// 📸 Popup Bukti Transaksi
-const Bukti = {
-  _index: null,
-
-  lihat(index) {
-    const data = Transaksi.semua[index];
-    if (!data.bukti) return alert("Tidak ada bukti untuk transaksi ini.");
-
-    document.getElementById("previewBukti").src = data.bukti;
-    document.getElementById("popupBuktiArea").classList.add("aktif");
-    Bukti._index = index;
-  },
-
-  close() {
-    document.getElementById("popupBuktiArea").classList.remove("aktif");
-  },
-
-  gantiBukti() {
-    document.getElementById("inputGantiBukti").click();
-  }
-};
-
-// ⚡ Jalankan Aplikasi
-const Aplikasi = {
-  mulai() {
-    Transaksi.semua.forEach((transaksi, index) => DOM.tambahTransaksi(transaksi, index));
-    DOM.perbaruiRingkasan();
-    Penyimpanan.simpan(Transaksi.semua);
-  }
-};
-
-/* ============================== */
-/*     EVENT LISTENERS & INIT     */
-/* ============================== */
-
-// Fungsi untuk memuat foto profil
-function loadProfilePhoto() {
-  const savedPhoto = localStorage.getItem('userPhoto');
-  const profileCircle = document.getElementById('profileCircle');
-  
-  if (savedPhoto) {
-    profileCircle.innerHTML = `<img src="${savedPhoto}" alt="Foto Profil" class="profile-image">`;
-  } else {
-    // Gunakan default avatar jika tidak ada foto
-    const userData = JSON.parse(localStorage.getItem('userData')) || {};
-    const nama = userData.namaLengkap || 'User';
-    const initial = nama.charAt(0).toUpperCase();
-    
-    profileCircle.innerHTML = `<div class="profile-default">${initial}</div>`;
-  }
-}
-
-// Fungsi untuk toggle dropdown
-function toggleProfileDropdown() {
-  const dropdown = document.getElementById('profileDropdown');
-  dropdown.classList.toggle('active');
-}
-
-// Fungsi untuk logout
-function logout() {
-  localStorage.removeItem('isLoggedIn');
-  localStorage.removeItem('currentUser');
-  window.location.href = 'index.html';
-}
-
-// Fungsi untuk menampilkan notifikasi
-function showNotification(message, type = 'info') {
-  // Hapus notifikasi sebelumnya
-  const existingNotification = document.querySelector('.notification');
-  if (existingNotification) {
-    existingNotification.remove();
-  }
-  
-  // Buat elemen notifikasi
-  const notification = document.createElement('div');
-  notification.className = `notification ${type}`;
-  notification.innerHTML = `
-    <div class="notification-content">
-      <i class="fas fa-${type === 'success' ? 'check-circle' : 'info-circle'}"></i>
-      <span>${message}</span>
-    </div>
-  `;
-  
-  // Tambahkan ke body
-  document.body.appendChild(notification);
-  
-  // Tampilkan notifikasi
-  setTimeout(() => {
-    notification.classList.add('show');
-  }, 100);
-  
-  // Sembunyikan setelah 3 detik
-  setTimeout(() => {
-    notification.classList.remove('show');
-    setTimeout(() => {
-      notification.remove();
-    }, 300);
-  }, 3000);
-}
-
-// Inisialisasi aplikasi saat DOM siap
-document.addEventListener("DOMContentLoaded", function() {
-  console.log("🚀 DOM Content Loaded");
-  
-  // Setup tanggal & waktu
-  perbaruiTanggalWaktu();
-  setInterval(perbaruiTanggalWaktu, 1000);
-  
-  // Setup chart controls
-  initChartControls();
-  
-  // EVENT LISTENERS UNTUK FORM
-  const formTransaction = document.getElementById("formTransaction");
-  if (formTransaction) {
-    formTransaction.addEventListener("submit", function(event) {
-      Form.submit(event);
+    // 🎯 Inisialisasi Aplikasi
+    document.addEventListener("DOMContentLoaded", async function() {
+      console.log("📄 DOM Loaded");
+      
+      // Cek login
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = "index.html";
+        return;
+      }
+      
+      // Setup
+      perbaruiTanggalWaktu();
+      setInterval(perbaruiTanggalWaktu, 1000);
+      
+      // Setup profil dan navigasi
+      await loadProfilePhoto();
+      setupEventListeners();
+      
+      // Set tanggal default ke hari ini
+      const dateInput = document.getElementById("dateInput");
+      if (dateInput) {
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.value = today;
+      }
+      
+      // Jalankan app
+      await Aplikasi.mulai();
     });
-  }
-  
-  // Event listener untuk tombol tambah
-  const showFormBtn = document.getElementById("showForm");
-  if (showFormBtn) {
-    showFormBtn.addEventListener("click", function() {
-      Modal.open();
-    });
-  }
-  
-  // Event listener untuk tombol close modal
-  const closeBtn = document.getElementById("close");
-  if (closeBtn) {
-    closeBtn.addEventListener("click", function() {
-      Modal.close();
-    });
-  }
-  
-  // Event listener untuk tombol batal
-  const cancelBtn = document.querySelector(".cancel");
-  if (cancelBtn) {
-    cancelBtn.addEventListener("click", function() {
-      Modal.close();
-    });
-  }
-  
-  // Event listener untuk tombol bukti close
-  const buktiCloseBtn = document.querySelector("#popupBuktiArea .btn_close");
-  if (buktiCloseBtn) {
-    buktiCloseBtn.addEventListener("click", function() {
-      Bukti.close();
-    });
-  }
-  
-  // Event listener untuk tombol ganti bukti
-  const gantiBuktiBtn = document.querySelector("#popupBuktiArea .save");
-  if (gantiBuktiBtn) {
-    gantiBuktiBtn.addEventListener("click", function() {
-      Bukti.gantiBukti();
-    });
-  }
-  
-  // Event listener untuk blur popup bukti
-  const buktiBlur = document.querySelector("#popupBuktiArea .popupblur");
-  if (buktiBlur) {
-    buktiBlur.addEventListener("click", function() {
-      Bukti.close();
-    });
-  }
-  
-  // NAVBAR EVENT LISTENERS
-  const profileCircle = document.getElementById("profileCircle");
-  const profileDropdown = document.getElementById("profileDropdown");
-  const logoutBtn = document.getElementById("logoutBtn");
-  
-  if (profileCircle) {
-    profileCircle.addEventListener("click", function(e) {
-      e.stopPropagation();
-      toggleProfileDropdown();
-    });
-  }
-  
-  if (logoutBtn) {
-    logoutBtn.addEventListener("click", logout);
-  }
-  
-  // Tutup dropdown saat klik di luar
-  document.addEventListener("click", function() {
-    if (profileDropdown) {
-      profileDropdown.classList.remove("active");
-    }
-  });
-  
-  // Setup profil
-  loadProfilePhoto();
-  
-  // Cek status login
-  const isLoggedIn = localStorage.getItem("isLoggedIn");
-  if (isLoggedIn !== "true") {
-    window.location.href = "index.html";
-    return;
-  }
-  
-  // Jalankan aplikasi
-  Aplikasi.mulai();
-  
-  // Initial chart load
-  updateChart();
-});
 
-// Event listener untuk reset data
-document.getElementById("resetData")?.addEventListener("click", function(e) {
-  e.preventDefault();
-  if (confirm("Apakah Anda yakin ingin mengatur ulang semua data transaksi?")) {
-    localStorage.removeItem("transaksi");
-    Aplikasi.mulai();
-    updateChart();
-    showNotification("Semua data transaksi telah direset", "success");
-  }
-});
-
-// Ganti bukti transaksi
-document.getElementById("inputGantiBukti")?.addEventListener("change", function () {
-  const file = this.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = e => {
-    const base64 = e.target.result;
-    const index = Bukti._index;
-
-    Transaksi.semua[index].bukti = base64;
-    Penyimpanan.simpan(Transaksi.semua);
-
-    document.getElementById("previewBukti").src = base64;
-  };
-  reader.readAsDataURL(file);
-});
+    // Handle page visibility change (refresh data when page becomes visible)
+    document.addEventListener('visibilitychange', function() {
+      if (!document.hidden) {
+        // Page is visible, refresh data
+        Aplikasi.mulai();
+      }
+    })
