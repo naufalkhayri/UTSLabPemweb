@@ -1,11 +1,48 @@
 # Dependencies
 node_modules/
 simanja-backend/node_modules/
+*/node_modules/
 
 # Build outputs
 _site/
 .sass-cache/
+.jekyll-cache/
 
-# Environment
+# Environment variables
 .env
 .env.local
+.env.production
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Backup files
+*.bak
+*.tmp
