@@ -1,0 +1,11 @@
+# Dependencies
+node_modules/
+simanja-backend/node_modules/
+
+# Build outputs
+_site/
+.sass-cache/
+
+# Environment
+.env
+.env.local
