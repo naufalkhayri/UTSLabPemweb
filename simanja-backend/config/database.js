@@ -7,7 +7,7 @@ const pool = new Pool({
   database: process.env.PGDATABASE,
   password: process.env.PGPASSWORD,
   port: process.env.DB_PORT,
- token : process.env.JWT_SECRET,
+  token : process.env.JWT_SECRET,
   ssl: {
     rejectUnauthorized: false,
   },
