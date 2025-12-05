@@ -1,6 +1,116 @@
+// controllers/transactionController.js
 const db = require('../config/database');
 
 const transactionController = {
+  // Buat transaksi baru (MEMORY STORAGE VERSION)
+  createTransaction: async (req, res) => {
+    try {
+      console.log('📝 Creating transaction with memory storage');
+      console.log('   File present:', !!req.file);
+      
+      const { keterangan, jumlah, jenis, tanggal } = req.body;
+      
+      // Validasi input
+      if (!keterangan || !jumlah || !jenis || !tanggal) {
+        return res.status(400).json({ 
+          success: false,
+          error: 'Semua field wajib diisi' 
+        });
+      }
+
+      if (jenis !== 'income' && jenis !== 'expense') {
+        return res.status(400).json({ 
+          success: false,
+          error: 'Jenis harus "income" atau "expense"' 
+        });
+      }
+
+      // Handle file upload jika ada
+      let fileInfo = null;
+      
+      if (req.file) {
+        console.log('📁 File details:', {
+          originalname: req.file.originalname,
+          mimetype: req.file.mimetype,
+          size: req.file.size + ' bytes',
+          bufferSize: req.file.buffer ? req.file.buffer.length + ' bytes' : 'no buffer'
+        });
+        
+        // File ada di memory (req.file.buffer)
+        // Kita bisa convert ke Base64 jika perlu, atau cukup simpan info saja
+        fileInfo = {
+          originalName: req.file.originalname,
+          mimeType: req.file.mimetype,
+          size: req.file.size,
+          uploadedAt: new Date().toISOString(),
+          // Base64 representation (optional, comment if too large)
+          // base64: req.file.buffer.toString('base64').substring(0, 100) + '...'
+        };
+        
+        // NOTE: File TIDAK disimpan permanen di memory storage!
+        // Setelah request selesai, file akan hilang dari memory
+      }
+
+      // Simpan transaksi ke database
+      const newTransaction = await db.query(
+        `INSERT INTO transactions 
+         (user_id, keterangan, jumlah, jenis, tanggal, bukti_transaksi) 
+         VALUES ($1, $2, $3, $4, $5, $6) 
+         RETURNING *`,
+        [
+          req.user.userId, 
+          keterangan, 
+          parseFloat(jumlah), 
+          jenis, 
+          tanggal,
+          // Simpan file info sebagai JSON string atau null
+          fileInfo ? JSON.stringify(fileInfo) : null
+        ]
+      );
+
+      res.status(201).json({
+        success: true,
+        message: 'Transaksi berhasil ditambahkan',
+        transaction: newTransaction.rows[0],
+        fileUploaded: !!req.file,
+        fileInfo: fileInfo ? {
+          name: fileInfo.originalName,
+          size: fileInfo.size,
+          type: fileInfo.mimeType,
+          note: 'File disimpan di memory sementara dan tidak tersimpan permanen'
+        } : null,
+        storageNote: 'Memory storage: File hanya tersimpan selama request'
+      });
+
+    } catch (error) {
+      console.error('❌ Create transaction error:', error);
+      
+      // Error handling spesifik
+      if (error.code === '23505') { // Unique constraint violation
+        return res.status(400).json({ 
+          success: false,
+          error: 'Data duplikat ditemukan' 
+        });
+      }
+      
+      if (error.code === '23503') { // Foreign key violation
+        return res.status(400).json({ 
+          success: false,
+          error: 'User tidak ditemukan' 
+        });
+      }
+      
+      res.status(500).json({ 
+        success: false,
+        error: 'Terjadi kesalahan server',
+        ...(process.env.NODE_ENV === 'development' && { 
+          details: error.message,
+          stack: error.stack 
+        })
+      });
+    }
+  },
+
   // Get semua transaksi user
   getTransactions: async (req, res) => {
     try {
@@ -44,8 +154,26 @@ const transactionController = {
       const totalCount = parseInt(countResult.rows[0].count);
       const totalPages = Math.ceil(totalCount / limit);
 
+      // Parse bukti_transaksi jika berupa JSON
+      const parsedTransactions = transactions.rows.map(trans => {
+        let buktiTransaksi = trans.bukti_transaksi;
+        try {
+          if (buktiTransaksi && buktiTransaksi.startsWith('{')) {
+            buktiTransaksi = JSON.parse(buktiTransaksi);
+          }
+        } catch (e) {
+          // Biarkan sebagai string jika bukan JSON
+        }
+        
+        return {
+          ...trans,
+          bukti_transaksi: buktiTransaksi
+        };
+      });
+
       res.json({
-        transactions: transactions.rows,
+        success: true,
+        transactions: parsedTransactions,
         pagination: {
           currentPage: parseInt(page),
           totalPages,
@@ -57,42 +185,10 @@ const transactionController = {
 
     } catch (error) {
       console.error('Get transactions error:', error);
-      res.status(500).json({ error: 'Terjadi kesalahan server' });
-    }
-  },
-
-  // Buat transaksi baru
-  createTransaction: async (req, res) => {
-    try {
-      const { keterangan, jumlah, jenis, tanggal } = req.body;
-      
-      if (!keterangan || !jumlah || !jenis || !tanggal) {
-        return res.status(400).json({ error: 'Semua field wajib diisi' });
-      }
-
-      if (jenis !== 'income' && jenis !== 'expense') {
-        return res.status(400).json({ error: 'Jenis harus income atau expense' });
-      }
-
-      // Handle file upload jika ada
-      const buktiTransaksi = req.file ? `/uploads/${req.file.filename}` : null;
-
-      const newTransaction = await db.query(
-        `INSERT INTO transactions 
-         (user_id, keterangan, jumlah, jenis, tanggal, bukti_transaksi) 
-         VALUES ($1, $2, $3, $4, $5, $6) 
-         RETURNING *`,
-        [req.user.userId, keterangan, parseFloat(jumlah), jenis, tanggal, buktiTransaksi]
-      );
-
-      res.status(201).json({
-        message: 'Transaksi berhasil ditambahkan',
-        transaction: newTransaction.rows[0]
+      res.status(500).json({ 
+        success: false,
+        error: 'Terjadi kesalahan server' 
       });
-
-    } catch (error) {
-      console.error('Create transaction error:', error);
-      res.status(500).json({ error: 'Terjadi kesalahan server' });
     }
   },
 
