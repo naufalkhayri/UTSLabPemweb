@@ -14,36 +14,63 @@
 
   <!-- File CSS -->
   <link rel="stylesheet" href="./assets/css/style.css" />
-  <link rel="stylesheet" href="./assets/css/responsive.css" />
+  
+  <!-- Font Awesome untuk icon -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-
 <body>
-  <!-- BAGIAN HEADER -->
+  <!-- BAGIAN HEADER DENGAN NAVBAR -->
   <header>
-  <div class="header-top">
-    <div>
-      <p id="date"></p>
-      <p id="time"></p>
+    <div class="navbar-container">
+      <div class="navbar-left">
+        <h1 class="logo">Keuanganku</h1>
+      </div>
+      
+      <div class="navbar-right">
+        <div class="date-time">
+          <p id="date"></p>
+          <p id="time"></p>
+        </div>
+        
+        <!-- Profil Section -->
+        <div class="profile-section">
+          <div class="profile-circle" id="profileCircle">
+            <!-- Foto profil akan dimuat di sini melalui JavaScript -->
+          </div>
+          
+          <!-- Dropdown Menu -->
+          <div class="profile-dropdown" id="profileDropdown">
+            <a href="profil.html" class="dropdown-item">
+              <i class="fas fa-user"></i>
+              Profil Diri
+            </a>
+            <a href="dashboard.html" class="dropdown-item">
+              <i class="fas fa-chart-line"></i>
+              Dashboard
+            </a>
+            <button class="dropdown-item logout" id="logoutBtn">
+              <i class="fas fa-sign-out-alt"></i>
+              Logout
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
-    <button class="profil_btn" onclick="bukaProfil()">Profil Saya</button>
-  </div>
-  <h1 id="headerUang">Keuanganku</h1>
-</header>
+  </header>
 
   <main>
     <!-- POPUP / FORM TAMBAH TRANSAKSI -->
     <section class="popup_area">
       <div class="popupblur"></div>
       <div class="popup">
-        <button class="btn_close" id="close" onclick="Modal.close()">&#x2715;</button>
+        <button class="btn_close" id="close">&#x2715;</button>
         <div class="body_popup">
           <h2>Transaksi Baru</h2>
-          <form id="formTransaction" onsubmit="Form.submit(event)">
+          <form id="formTransaction">
             <div class="option_form">
-              <label><input type="radio" name="type" value="income">Pemasukan</label>
-              <label><input type="radio" name="type" value="expense" checked>Pengeluaran</label>
+              <label><input type="radio" name="type" value="income" id="incomeRadio">Pemasukan</label>
+              <label><input type="radio" name="type" value="expense" id="expenseRadio" checked>Pengeluaran</label>
             </div>
 
             <div class="form">
@@ -53,8 +80,7 @@
 
             <div class="form">
               <label for="amount">Jumlah (Rp):</label>
-              <input type="number" id="amount" name="amount" step="0.01" placeholder="0.00" required>
-              <small>Gunakan tanda minus (-) untuk pengeluaran</small>
+              <input type="number" id="amount" name="amount" step="0.01" placeholder="0.00" min="0" required>
             </div>
 
             <div class="form">
@@ -68,7 +94,7 @@
             </div>
 
             <div class="input-group actions">
-              <button type="button" class="cancel" onclick="Modal.close()">Batal</button>
+              <button type="button" class="cancel">Batal</button>
               <button type="submit" class="save">Simpan</button>
             </div>
           </form>
@@ -76,11 +102,37 @@
       </div>
     </section>
 
-    <!-- BAGIAN RINGKASAN -->
+    <!-- BAGIAN RINGKASAN DENGAN ICON -->
     <section class="recap_box">
-      <h4 id="incomeDisplay">Total Pemasukan: Rp 0</h4>
-      <h4 id="expenseDisplay">Total Pengeluaran: Rp 0</h4>
-      <h4 id="totalDisplay">Saldo Akhir: Rp 0</h4>
+      <div class="recap-item pemasukan">
+        <div class="recap-icon">
+          <i class="fas fa-arrow-down"></i>
+        </div>
+        <div class="recap-content">
+          <h4>Total Pemasukan</h4>
+          <p id="incomeDisplay">Rp 0</p>
+        </div>
+      </div>
+      
+      <div class="recap-item pengeluaran">
+        <div class="recap-icon">
+          <i class="fas fa-arrow-up"></i>
+        </div>
+        <div class="recap-content">
+          <h4>Total Pengeluaran</h4>
+          <p id="expenseDisplay">Rp 0</p>
+        </div>
+      </div>
+      
+      <div class="recap-item saldo">
+        <div class="recap-icon">
+          <i class="fas fa-wallet"></i>
+        </div>
+        <div class="recap-content">
+          <h4>Saldo Akhir</h4>
+          <p id="totalDisplay">Rp 0</p>
+        </div>
+      </div>
     </section>
 
     <!-- DAFTAR TRANSAKSI -->
@@ -103,24 +155,57 @@
       </div>
     </section>
 
-    <h2>Statistik Pengeluaran</h2>
-<canvas id="chartPengeluaran" width="300" height="300"></canvas>
+<!-- CHART SECTION - SAMA PERSIS DENGAN LIST BOX -->
+<section class="chart-section">
+  <div class="chart-container">
+    <div class="chart-header">
+      <h2>Statistik Keuangan</h2>
+    </div>
+    
+    <div class="chart-controls">
+      <select id="chartTypeSelector">
+        <option value="pie">Pie Chart - Distribusi Pengeluaran</option>
+        <option value="line">Line Chart - Trend Bulanan</option>
+        <option value="bar">Bar Chart - Perbandingan Bulanan</option>
+        <option value="doughnut">Donut Chart - Distribusi Pengeluaran</option>
+      </select>
+      <select id="timeRangeSelector">
+        <option value="all">Semua Waktu</option>
+        <option value="3months">3 Bulan Terakhir</option>
+        <option value="6months">6 Bulan Terakhir</option>
+        <option value="1year">1 Tahun Terakhir</option>
+      </select>
+    </div>
+    
+    <div class="chart-wrap">
+      <!-- CANVAS UTAMA -->
+      <canvas id="mainChart"></canvas>
+
+      <!-- NO DATA MESSAGE -->
+      <div class="no-data-box" style="display:none;">
+        <i class="fas fa-chart-pie"></i>
+        <p>Belum ada data transaksi</p>
+        <small>Tambahkan transaksi untuk melihat statistik</small>
+      </div>
+    </div>
+  </div>
+</section>
 
 
     <!-- TOMBOL TAMBAH -->
-    <button class="show_form" id="showForm" onclick="Modal.open()">+</button>
-  <div class="popup_area" id="popupBuktiArea">
-  <div class="popupblur" onclick="Bukti.close()"></div>
-  <div class="popup" style="max-width:350px;">
-    <button class="btn_close" onclick="Bukti.close()">&#x2715;</button>
-    <h2>Bukti Transaksi</h2>
-    <img id="previewBukti" style="width:100%;border-radius:10px;margin-bottom:15px">
-    <button class="save" onclick="Bukti.gantiBukti()">Ganti Bukti</button>
-    <input type="file" id="inputGantiBukti" accept="image/*" style="display:none;">
-  </div>
-</div>
+    <button class="show_form" id="showForm">+</button>
 
-
+    <!-- POPUP BUKTI -->
+    <div class="popup_area" id="popupBuktiArea">
+      <div class="popupblur"></div>
+      <div class="popup" style="max-width:350px;">
+        <button class="btn_close">&#x2715;</button>
+        <h2>Bukti Transaksi</h2>
+        <img id="previewBukti" style="width:100%;border-radius:10px;margin-bottom:15px">
+        <button class="save">Ganti Bukti</button>
+        <input type="file" id="inputGantiBukti" accept="image/*" style="display:none;">
+      </div>
+    </div>
   </main>
 
   <!-- BAGIAN FOOTER -->
@@ -136,93 +221,5 @@
 
   <!-- JAVASCRIPT -->
   <script src="./assets/js/main.js"></script>
- 
- 
- <!-- Small Pie Chart -->
-<style>
-  /* sesuaikan ukuran di sini */
-  #chartPengeluaran {
-    width: 350px !important;   /* ubah angka ini kalau mau lebih kecil/besar */
-    height: 350px !important;  /* ubah angka ini kalau mau lebih kecil/besar */
-    display: block;
-    margin: 12px auto;
-  }
-  /* container supaya rapi */
-  .chart-wrap {
-    width: 300px;
-    margin: 6px auto;
-    text-align: center;
-  }
-</style>
-
-<div class="chart-wrap">
-  <canvas id="chartPengeluaran"></canvas>
-</div>
-
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-  // Baca data dari localStorage sesuai main.js kamu
-  const data = JSON.parse(localStorage.getItem("transaksi")) || [];
-
-  // Kumpulkan total per kategori (menggunakan keterangan sebagai kategori)
-  const kategoriMap = {};
-  data.forEach(t => {
-    const kategori = (t.keterangan || "Lainnya").trim();
-    const jumlah = Math.abs(Number(t.jumlah)) || 0;
-    if (!kategoriMap[kategori]) kategoriMap[kategori] = 0;
-    kategoriMap[kategori] += jumlah;
-  });
-
-  const labels = Object.keys(kategoriMap);
-  const values = Object.values(kategoriMap);
-
-  // Kalau kosong, jangan coba render
-  if (!labels.length) {
-    // opsi: tampilkan teks kecil bahwa belum ada data
-    const wrap = document.querySelector('.chart-wrap');
-    if (wrap) {
-      wrap.innerHTML = '<small>Tidak ada data transaksi</small>';
-    }
-    return;
-  }
-
-  // Ambil elemen canvas
-  const canvas = document.getElementById("chartPengeluaran");
-  // Pastikan canvas punya context
-  const ctx = canvas.getContext("2d");
-
-  // Hapus chart lama kalau ada (mencegah duplikasi saat reload)
-  if (canvas._chartInstance) {
-    canvas._chartInstance.destroy();
-  }
-
-  // Buat chart dengan responsive = false (agar ukurannya pakai CSS di atas)
-  const chart = new Chart(ctx, {
-    type: "pie",
-    data: {
-      labels: labels,
-      datasets: [{
-        data: values,
-        borderWidth: 1
-      }]
-    },
-    options: {
-      responsive: false,
-      plugins: {
-        legend: {
-          position: "bottom",
-          labels: { boxWidth: 10, padding: 8 }
-        }
-      }
-    }
-  });
-
-  // Simpan instance supaya bisa dihancurkan kalau di-refresh ulang
-  canvas._chartInstance = chart;
-});
-</script>
-
-
-
-  
+</body>
 </html>
