@@ -1,25 +1,12 @@
-<<<<<<< HEAD
-/* =================================================== */
-/* HALAMAN PROFIL PENGGUNA (TEMA HIJAU)               */
-/* =================================================== */
-* {
-=======
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
->>>>>>> bdf8fc98f4702c49704ae80c5cfe686784ffdb1f
   font-family: "Poppins", sans-serif;
-  box-sizing: border-box;
 }
 
-<<<<<<< HEAD
-.profil_body {
-  background: linear-gradient(135deg, #16a34a, #22c55e);
-=======
 body {
   background: rgba(255, 255, 255, 0.95);
->>>>>>> bdf8fc98f4702c49704ae80c5cfe686784ffdb1f
   min-height: 100vh;
   color: #2d3748;
   line-height: 1.6;
@@ -42,27 +29,6 @@ body {
   padding: 0 20px;
   display: flex;
   justify-content: space-between;
-<<<<<<< HEAD
-  animation: fadeIn 1s ease;
-  margin: 0;
-  padding: 0;
-}
-
-.profil_header {
-  text-align: center;
-  color: white;
-  padding: 30px 10px;
-  font-size: 1.8rem;
-  letter-spacing: 1px;
-  font-weight: 600;
-  animation: slideDown 0.8s ease;
-}
-
-.profil_container {
-  display: flex;
-  justify-content: center;
-=======
->>>>>>> bdf8fc98f4702c49704ae80c5cfe686784ffdb1f
   align-items: center;
 }
 
@@ -191,31 +157,14 @@ body {
   margin-bottom: 15px;
 }
 
-.profil_header_card {
-  position: relative;
-  margin-bottom: 20px;
-}
-
-.foto-container {
-  position: relative;
-  display: inline-block;
-  margin-bottom: 15px;
-}
-
 .profil_foto {
   width: 120px;
   height: 120px;
   border-radius: 50%;
-<<<<<<< HEAD
-  border: 3px solid #16a34a;
-  transition: transform 0.4s ease;
-  object-fit: cover;
-=======
   border: 4px solid #16a34a;
   object-fit: cover;
   transition: transform 0.3s ease;
   background-color: #f8fafc;
->>>>>>> bdf8fc98f4702c49704ae80c5cfe686784ffdb1f
 }
 
 .profil_foto:hover {
@@ -253,110 +202,18 @@ body {
   transform: scale(1.1);
 }
 
-.upload-overlay {
-  position: absolute;
-  bottom: 5px;
-  right: 5px;
-  background: #16a34a;
-  border-radius: 50%;
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  opacity: 0;
-}
-
-.foto-container:hover .upload-overlay {
-  opacity: 1;
-}
-
-.upload-btn {
-  color: white;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.upload-overlay:hover {
-  background: #15803d;
-  transform: scale(1.1);
-}
-
 .status {
-<<<<<<< HEAD
-  color: #43a047;
-=======
   color: #16a34a;
->>>>>>> bdf8fc98f4702c49704ae80c5cfe686784ffdb1f
   font-weight: 600;
   font-size: 1em;
 }
 
-<<<<<<< HEAD
-.profil_info {
-  text-align: left;
-  margin-top: 20px;
-  padding: 15px 20px;
-  background: #f5f7fa;
-  border-radius: 10px;
-  transition: background 0.3s ease;
-}
-
-.profil_info:hover {
-  background: #e8f5e9;
-}
-
-.profil_info h3 {
-  color: #16a34a;
-  font-size: 18px;
-  margin-bottom: 10px;
-  border-bottom: 2px solid #16a34a;
-  display: inline-block;
-}
-
-.profil_info p {
-  font-size: 15px;
-  margin: 8px 0;
-  line-height: 1.5;
-}
-
-.profil_bio {
-  margin-top: 20px;
-  text-align: left;
-  background: #f0fdf4;
-  padding: 15px;
-  border-radius: 10px;
-  animation: fadeIn 1.5s ease;
-}
-
-.profil_bio h3 {
-  color: #16a34a;
-  margin-bottom: 10px;
-}
-
-.profil_bio p {
-  color: #444;
-  font-size: 14px;
-  line-height: 1.6;
-}
-
-.profil_aksi {
-  display: flex;
-  justify-content: space-around;
-  margin-top: 25px;
-  gap: 15px;
-=======
 /* Basic Info Section */
 .basic-info {
   display: flex;
   flex-direction: column;
   justify-content: center;
   height: 100%;
->>>>>>> bdf8fc98f4702c49704ae80c5cfe686784ffdb1f
 }
 
 .basic-info h2 {
@@ -391,10 +248,6 @@ body {
 .edit-btn {
   padding: 12px 25px;
   border: none;
-<<<<<<< HEAD
-  padding: 12px 25px;
-  border-radius: 25px;
-=======
   border-radius: 12px;
   font-weight: 600;
   font-size: 1em;
@@ -601,36 +454,21 @@ body {
   border: none;
   padding: 12px 25px;
   border-radius: 12px;
->>>>>>> bdf8fc98f4702c49704ae80c5cfe686784ffdb1f
   cursor: pointer;
   font-weight: 600;
   transition: all 0.3s ease;
   flex: 1;
-<<<<<<< HEAD
-  max-width: 180px;
-}
-
-.edit_btn {
-=======
   font-size: 14px;
 }
 
 .save_btn {
->>>>>>> bdf8fc98f4702c49704ae80c5cfe686784ffdb1f
   background: #16a34a;
   color: white;
 }
 
-<<<<<<< HEAD
-.edit_btn:hover {
-  background: #15803d;
-  transform: scale(1.05);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-=======
 .save_btn:hover {
   background: #15803d;
   transform: translateY(-2px);
->>>>>>> bdf8fc98f4702c49704ae80c5cfe686784ffdb1f
 }
 
 .cancel_btn {
@@ -644,206 +482,18 @@ body {
   transform: translateY(-2px);
 }
 
-<<<<<<< HEAD
-.profil_footer {
-  background: rgba(255, 255, 255, 0.1);
-  text-align: center;
-  color: white;
-  padding: 20px;
-  font-size: 14px;
-}
-
-/* Modal Styles */
-.modal {
-  display: none;
-  position: fixed;
-  z-index: 1000;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  animation: fadeIn 0.3s ease;
-  overflow: auto; /* Memungkinkan scroll pada modal backdrop */
-}
-
-.modal-content {
-  background-color: white;
-  margin: 5% auto;
-  padding: 30px;
-  border-radius: 15px;
-  width: 90%;
-  max-width: 500px;
-  max-height: 85vh; /* Membatasi tinggi maksimal */
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-  animation: slideUp 0.4s ease;
-  position: relative;
-  overflow-y: auto; /* Memungkinkan scroll pada konten modal */
-}
-
-.close {
-  color: #aaa;
-  float: right;
-  font-size: 28px;
-  font-weight: bold;
-  position: absolute;
-  top: 15px;
-  right: 20px;
-  cursor: pointer;
-  transition: color 0.3s;
-  z-index: 1001; /* Pastikan tombol close di atas konten */
-}
-
-.close:hover {
-  color: #16a34a;
-}
-
-.modal-content h2 {
-  color: #16a34a;
-  margin-bottom: 20px;
-  text-align: center;
-  position: sticky;
-  top: 0;
-  background: white;
-  padding: 10px 0;
-  z-index: 1;
-}
-
-/* Form container dengan scroll */
-.modal-form {
-  max-height: calc(85vh - 150px); /* Tinggi maksimal untuk form */
-  overflow-y: auto; /* Scroll pada form jika diperlukan */
-  padding-right: 5px; /* Ruang untuk scrollbar */
-}
-
-/* Custom scrollbar untuk modal */
-.modal-form::-webkit-scrollbar {
-  width: 6px;
-}
-
-.modal-form::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 10px;
-}
-
-.modal-form::-webkit-scrollbar-thumb {
-  background: #16a34a;
-  border-radius: 10px;
-}
-
-.modal-form::-webkit-scrollbar-thumb:hover {
-  background: #15803d;
-}
-
-.form-group {
-  margin-bottom: 20px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 600;
-  color: #333;
-}
-
-.form-group input,
-.form-group select,
-.form-group textarea {
-  width: 100%;
-  padding: 12px 15px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 14px;
-  transition: border 0.3s;
-}
-
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
-  border-color: #16a34a;
-  outline: none;
-  box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.2);
-}
-
-.form-actions {
-  display: flex;
-  justify-content: space-between;
-  gap: 15px;
-  margin-top: 25px;
-  position: sticky;
-  bottom: 0;
-  background: white;
-  padding: 10px 0;
-  border-top: 1px solid #eee;
-}
-
-.save_btn, .cancel_btn {
-  border: none;
-  padding: 12px 25px;
-  border-radius: 25px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  flex: 1;
-}
-
-.save_btn {
-  background: #16a34a;
-  color: white;
-}
-
-.save_btn:hover {
-  background: #15803d;
-  transform: scale(1.05);
-}
-
-.cancel_btn {
-  background: #f1f5f9;
-  color: #64748b;
-}
-
-.cancel_btn:hover {
-  background: #e2e8f0;
-  transform: scale(1.05);
-}
-
-=======
->>>>>>> bdf8fc98f4702c49704ae80c5cfe686784ffdb1f
 /* Animations */
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
-<<<<<<< HEAD
-@keyframes slideDown {
-  from { transform: translateY(-30px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
-
-@keyframes slideUp {
-  from { transform: translateY(30px); opacity: 0; }
-=======
 @keyframes slideUp {
   from { transform: translateY(50px); opacity: 0; }
->>>>>>> bdf8fc98f4702c49704ae80c5cfe686784ffdb1f
   to { transform: translateY(0); opacity: 1; }
 }
 
 /* Responsive Design */
-<<<<<<< HEAD
-@media (max-width: 600px) {
-  .profil_card {
-    padding: 25px 20px;
-  }
-  
-  .profil_aksi {
-    flex-direction: column;
-  }
-  
-  .edit_btn, .kembali_btn {
-    max-width: 100%;
-=======
 @media (max-width: 768px) {
   .profile-header {
     grid-template-columns: 1fr;
@@ -871,35 +521,12 @@ body {
   .modal-content {
     margin: 10% auto;
     width: 95%;
->>>>>>> bdf8fc98f4702c49704ae80c5cfe686784ffdb1f
   }
   
   .form-actions {
     flex-direction: column;
   }
   
-<<<<<<< HEAD
-  .modal-content {
-    margin: 10% auto;
-    padding: 20px;
-    max-height: 90vh;
-  }
-  
-  .modal-form {
-    max-height: calc(90vh - 120px);
-  }
-}
-
-/* Untuk layar yang sangat kecil */
-@media (max-height: 600px) {
-  .modal-content {
-    margin: 2% auto;
-    max-height: 96vh;
-  }
-  
-  .modal-form {
-    max-height: calc(96vh - 120px);
-=======
   .nav-container {
     flex-direction: column;
     gap: 15px;
@@ -944,6 +571,5 @@ body {
   .nav-back-btn {
     padding: 8px 16px;
     font-size: 0.9em;
->>>>>>> bdf8fc98f4702c49704ae80c5cfe686784ffdb1f
   }
 }
