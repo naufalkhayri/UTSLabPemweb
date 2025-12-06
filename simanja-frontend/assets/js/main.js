@@ -26,7 +26,7 @@ const Modal = {
 
 // 🔐 API Helper Functions - DIUPDATE UNTUK BACKEND BARU
 const API = {
-    baseURL: 'https://simanjabackend-qli5.vercel.app/api',
+    baseURL: 'https://simanja-backend.vercel.app/api',
     
     async getHeaders(isFormData = false) {
         const token = localStorage.getItem('token');
