@@ -14,39 +14,6 @@ function perbaruiTanggalWaktu() {
     document.getElementById("time").textContent = sekarang.toLocaleTimeString("id-ID");
 }
 
-// 🗓️ Helper untuk menghitung tanggal awal berdasarkan rentang
-function getDateRange(range) {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Atur ke awal hari ini untuk konsistensi
-
-    let startDate = null;
-    let tempDate = new Date(today); // Gunakan salinan untuk manipulasi
-
-    switch (range) {
-        case '3m':
-            // Mundur 3 bulan
-            tempDate.setMonth(tempDate.getMonth() - 3);
-            startDate = tempDate.toISOString().split('T')[0];
-            break;
-        case '6m':
-            // Mundur 6 bulan
-            tempDate.setMonth(tempDate.getMonth() - 6);
-            startDate = tempDate.toISOString().split('T')[0];
-            break;
-        case '1y':
-            // Mundur 1 tahun
-            tempDate.setFullYear(tempDate.getFullYear() - 1);
-            startDate = tempDate.toISOString().split('T')[0];
-            break;
-        case 'all':
-        default:
-            startDate = null; 
-            break;
-    }
-    // Catatan: endDate dibiarkan null, yang akan default ke hari ini di backend
-    return { startDate };
-}
-
 // ⚙️ Modal
 const Modal = {
     open() {
@@ -71,7 +38,6 @@ const API = {
             'Authorization': `Bearer ${token}`
         };
         
-        // PENTING: Jangan set Content-Type untuk FormData agar browser bisa mengatur boundary
         if (!isFormData) {
             headers['Content-Type'] = 'application/json';
         }
@@ -105,11 +71,9 @@ const API = {
             };
             
             if (isFormData) {
-                // Untuk FormData, kita hanya perlu menambahkan header Authorization
                 options.headers = { 'Authorization': await API.getHeaders(true).then(h => h.Authorization) };
                 options.body = data;
             } else {
-                // Untuk JSON, kita perlu Content-Type: application/json
                 options.headers = await this.getHeaders(isFormData);
                 options.body = JSON.stringify(data);
             }
@@ -180,7 +144,7 @@ const Transaksi = {
             console.log('✅ Transaction added:', response);
             
             // Reload data terbaru dari server
-            await this.load(); // PENTING: Memastikan data 'semua' terupdate
+            await this.load(); 
             return response;
         } catch (error) {
             console.error('❌ Error adding transaction:', error);
@@ -203,19 +167,11 @@ const Transaksi = {
         }
     },
 
-    async getRingkasan(options = {}) { // <--- MODIFIKASI: Menerima options
+    async getRingkasan() {
         try {
-            console.log('🔍 Getting summary dari backend...', options);
-            
-            let url = '/transactions/summary/summary';
-            
-            // MODIFIKASI: Tambahkan parameter tanggal jika ada
-            if (options.startDate || options.endDate) {
-                const params = new URLSearchParams(options).toString();
-                url += `?${params}`;
-            }
-
-            const data = await API.get(url); // <--- Gunakan URL dengan parameter
+            console.log('🔍 Getting summary dari backend...');
+            // ENDPOINT SUDAH DIPERBAIKI
+            const data = await API.get('/transactions/summary/summary'); 
             
             // Format data untuk frontend
             return {
@@ -248,8 +204,58 @@ const Transaksi = {
 
     saldo() {
         return this.pemasukan() - this.pengeluaran();
+    },
+
+    // ===============================================
+    // PERBAIKAN: LOGIKA FILTER WAKTU UNTUK CHART
+    // ===============================================
+    getFilteredTransactions(range) {
+        if (range === 'all') {
+            return this.semua;
+        }
+
+        let startDate = new Date();
+        
+        if (range === '3months') {
+            startDate.setMonth(startDate.getMonth() - 3);
+        } else if (range === '6months') {
+            startDate.setMonth(startDate.getMonth() - 6);
+        } else if (range === '1year') {
+            startDate.setFullYear(startDate.getFullYear() - 1);
+        } else {
+            return this.semua; 
+        }
+        
+        // Normalize startDate ke midnight lokal
+        startDate.setHours(0, 0, 0, 0); 
+        
+        const endDate = new Date(); 
+        // Normalize endDate ke akhir hari ini (agar transaksi hari ini terhitung)
+        endDate.setHours(23, 59, 59, 999); 
+        
+        const filteredList = this.semua.filter(t => {
+            if (!t.tanggal) return false;
+
+            // Parse tanggal secara manual (Y, M-1, D) untuk menghindari timezone offset
+            const parts = t.tanggal.split('-');
+            if (parts.length !== 3) return false;
+            
+            const year = parseInt(parts[0]);
+            const month = parseInt(parts[1]) - 1; 
+            const day = parseInt(parts[2]);
+            
+            const transactionDate = new Date(year, month, day); 
+            transactionDate.setHours(0, 0, 0, 0); // Normalize to local midnight
+
+            // Bandingkan timestamp
+            return transactionDate.getTime() >= startDate.getTime() && transactionDate.getTime() <= endDate.getTime();
+        });
+        
+        console.log(`✅ Total Transaksi dalam Range: ${filteredList.length}`);
+        
+        return filteredList;
     }
-};
+}; // <-- PERBAIKAN SINTAKS: TUTUP OBJEK TRANSAKSI DENGAN BENAR
 
 // 🧾 Manipulasi Tabel - DIUPDATE
 const DOM = {
@@ -263,7 +269,7 @@ const DOM = {
             return;
         }
         
-        // Urutkan berdasarkan tanggal terbaru
+        // Urutkan berdasarkan tanggal terbaru (menggunakan Transaksi.semua)
         const sortedTransactions = [...Transaksi.semua].sort((a, b) => 
             new Date(b.tanggal) - new Date(a.tanggal)
         );
@@ -323,7 +329,6 @@ const DOM = {
 
     async perbaruiRingkasan() {
         try {
-            // TIDAK MENGIRIM FILTER DI SINI, HANYA MENGAMBIL TOTAL KESELURUHAN (tanpa options)
             const ringkasan = await Transaksi.getRingkasan();
             
             document.getElementById("incomeDisplay").textContent = 
@@ -433,7 +438,7 @@ const Form = {
             // Update UI
             DOM.renderTransactions();
             await DOM.perbaruiRingkasan();
-            await updateChart(); // BARIS INI DITAMBAHKAN UNTUK AUTO-REFRESH CHART
+            await updateChart(); // Memastikan chart di-refresh dengan data terbaru
             
             // Reset & close
             this.hapusIsi();
@@ -487,16 +492,18 @@ async function updateChart() {
     if (!canvas) return;
 
     try {
-        // 1. Hitung rentang tanggal
-        const { startDate } = getDateRange(timeRange);
-        
-        // 2. Ambil data ringkasan yang difilter dari backend
-        console.log(`🔍 Fetching filtered summary for range: ${timeRange} (start: ${startDate || 'all time'})`);
-        const ringkasan = await Transaksi.getRingkasan({ startDate }); // Panggil dengan filter
-        
-        // 3. Gunakan hasil dari backend untuk chart
-        const pemasukan = ringkasan.totalIncome;
-        const pengeluaran = ringkasan.totalExpense;
+        // PERBAIKAN: Ambil data yang difilter berdasarkan timeRange
+        const filteredTransactions = Transaksi.getFilteredTransactions(timeRange);
+
+        // HITUNG PEMASUKAN DAN PENGELUARAN HANYA DARI DATA YANG SUDAH DIFILTER
+        const pemasukan = filteredTransactions
+            .filter(t => t.jenis === 'income')
+            .reduce((total, t) => total + parseFloat(t.jumlah || 0), 0);
+            
+        const pengeluaran = filteredTransactions
+            .filter(t => t.jenis === 'expense')
+            .reduce((total, t) => total + parseFloat(t.jumlah || 0), 0);
+
         const hasData = pemasukan > 0 || pengeluaran > 0;
 
         if (!hasData) {
@@ -513,8 +520,7 @@ async function updateChart() {
             labels: ['Pemasukan', 'Pengeluaran'],
             datasets: [{
                 label: 'Jumlah (Rp)',
-                // Gunakan data yang sudah difilter dari ringkasan
-                data: [pemasukan, pengeluaran], 
+                data: [pemasukan, pengeluaran],
                 backgroundColor: ['#3B82F6', '#EF4444'],
                 borderColor: ['#2563EB', '#DC2626'],
                 borderWidth: 2
@@ -763,7 +769,7 @@ function setupEventListeners() {
     }
     
     if (timeRangeSelector) {
-        timeRangeSelector.addEventListener('change', updateChart);
+        timeRangeSelector.addEventListener('change', updateChart); 
     }
     
     // Tombol reset data
