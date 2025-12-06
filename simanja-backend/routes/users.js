@@ -1,46 +1,80 @@
+// routes/users.js - Update bagian upload photo
 const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
 const { authenticateToken } = require('../middleware/auth');
-const upload = require('../middleware/upload');
 const bcrypt = require('bcryptjs');
 
-// GET user profile
-router.get('/profile', authenticateToken, async (req, res) => {
-  try {
-    console.log('🔍 Fetching user profile for user ID:', req.user.userId);
-    
-    const user = await db.query(
-      `SELECT id, nama_lengkap, email, nomor_hp, alamat, jenis_kelamin, 
-              tanggal_lahir, username, foto_profil, created_at 
-       FROM users WHERE id = $1`,
-      [req.user.userId]
-    );
+// Import upload middleware (memory storage)
+const upload = require('../middleware/upload');
 
-    if (user.rows.length === 0) {
-      return res.status(404).json({ error: 'User tidak ditemukan' });
+// UPLOAD profile photo (MEMORY STORAGE VERSION)
+router.post('/profile/photo', authenticateToken, upload.single('fotoProfil'), async (req, res) => {
+  try {
+    console.log('🖼️ Uploading profile photo (memory storage)');
+    
+    if (!req.file) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'File foto tidak ditemukan' 
+      });
     }
 
-    const userData = user.rows[0];
+    // File info (disimpan di memory, tidak di disk)
+    const fileInfo = {
+      originalName: req.file.originalname,
+      mimeType: req.file.mimetype,
+      size: req.file.size,
+      uploadedAt: new Date().toISOString(),
+      note: 'Memory storage - not saved permanently'
+    };
+
+    // Simpan file info sebagai JSON di database
+    // Atau bisa simpan Base64 jika perlu (tapi akan besar)
+    const fotoProfilInfo = JSON.stringify(fileInfo);
+
+    // Update database dengan file info
+    const updatedUser = await db.query(
+      `UPDATE users 
+       SET foto_profil = $1, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $2 
+       RETURNING id, nama_lengkap, email, foto_profil`,
+      [fotoProfilInfo, req.user.userId]
+    );
+
+    if (updatedUser.rows.length === 0) {
+      return res.status(404).json({ 
+        success: false,
+        error: 'User tidak ditemukan' 
+      });
+    }
+
+    const userData = updatedUser.rows[0];
     
+    // Parse foto_profil jika berupa JSON
+    let fotoProfil = userData.foto_profil;
+    try {
+      if (fotoProfil && fotoProfil.startsWith('{')) {
+        fotoProfil = JSON.parse(fotoProfil);
+      }
+    } catch (e) {
+      // Biarkan sebagai string
+    }
+
     res.json({
       success: true,
+      message: 'Foto profil berhasil diupload (memory storage)',
       user: {
         id: userData.id,
         namaLengkap: userData.nama_lengkap,
         email: userData.email,
-        nomorHP: userData.nomor_hp,
-        alamat: userData.alamat,
-        jenisKelamin: userData.jenis_kelamin,
-        tanggalLahir: userData.tanggal_lahir,
-        username: userData.username,
-        fotoProfil: userData.foto_profil,
-        createdAt: userData.created_at
+        fotoProfil: fotoProfil,
+        storageNote: 'File disimpan di memory sementara'
       }
     });
 
   } catch (error) {
-    console.error('❌ Get profile error:', error);
+    console.error('❌ Upload photo error:', error);
     res.status(500).json({ 
       success: false,
       error: 'Terjadi kesalahan server',
@@ -48,7 +82,6 @@ router.get('/profile', authenticateToken, async (req, res) => {
     });
   }
 });
-
 // UPDATE user profile
 router.put('/profile', authenticateToken, async (req, res) => {
   try {
