@@ -14,6 +14,39 @@ function perbaruiTanggalWaktu() {
     document.getElementById("time").textContent = sekarang.toLocaleTimeString("id-ID");
 }
 
+// 🗓️ Helper untuk menghitung tanggal awal berdasarkan rentang
+function getDateRange(range) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Atur ke awal hari ini untuk konsistensi
+
+    let startDate = null;
+    let tempDate = new Date(today); // Gunakan salinan untuk manipulasi
+
+    switch (range) {
+        case '3m':
+            // Mundur 3 bulan
+            tempDate.setMonth(tempDate.getMonth() - 3);
+            startDate = tempDate.toISOString().split('T')[0];
+            break;
+        case '6m':
+            // Mundur 6 bulan
+            tempDate.setMonth(tempDate.getMonth() - 6);
+            startDate = tempDate.toISOString().split('T')[0];
+            break;
+        case '1y':
+            // Mundur 1 tahun
+            tempDate.setFullYear(tempDate.getFullYear() - 1);
+            startDate = tempDate.toISOString().split('T')[0];
+            break;
+        case 'all':
+        default:
+            startDate = null; 
+            break;
+    }
+    // Catatan: endDate dibiarkan null, yang akan default ke hari ini di backend
+    return { startDate };
+}
+
 // ⚙️ Modal
 const Modal = {
     open() {
@@ -170,11 +203,19 @@ const Transaksi = {
         }
     },
 
-    async getRingkasan() {
+    async getRingkasan(options = {}) { // <--- MODIFIKASI: Menerima options
         try {
-            console.log('🔍 Getting summary dari backend...');
-            // PASTIKAN ENDPOINT SUDAH DIPERBAIKI DARI /summary MENJADI /summary/summary
-            const data = await API.get('/transactions/summary/summary'); 
+            console.log('🔍 Getting summary dari backend...', options);
+            
+            let url = '/transactions/summary/summary';
+            
+            // MODIFIKASI: Tambahkan parameter tanggal jika ada
+            if (options.startDate || options.endDate) {
+                const params = new URLSearchParams(options).toString();
+                url += `?${params}`;
+            }
+
+            const data = await API.get(url); // <--- Gunakan URL dengan parameter
             
             // Format data untuk frontend
             return {
@@ -282,6 +323,7 @@ const DOM = {
 
     async perbaruiRingkasan() {
         try {
+            // TIDAK MENGIRIM FILTER DI SINI, HANYA MENGAMBIL TOTAL KESELURUHAN (tanpa options)
             const ringkasan = await Transaksi.getRingkasan();
             
             document.getElementById("incomeDisplay").textContent = 
@@ -445,9 +487,16 @@ async function updateChart() {
     if (!canvas) return;
 
     try {
-        // Data untuk chart dari transaksi yang sudah ada
-        const pemasukan = Transaksi.pemasukan();
-        const pengeluaran = Transaksi.pengeluaran();
+        // 1. Hitung rentang tanggal
+        const { startDate } = getDateRange(timeRange);
+        
+        // 2. Ambil data ringkasan yang difilter dari backend
+        console.log(`🔍 Fetching filtered summary for range: ${timeRange} (start: ${startDate || 'all time'})`);
+        const ringkasan = await Transaksi.getRingkasan({ startDate }); // Panggil dengan filter
+        
+        // 3. Gunakan hasil dari backend untuk chart
+        const pemasukan = ringkasan.totalIncome;
+        const pengeluaran = ringkasan.totalExpense;
         const hasData = pemasukan > 0 || pengeluaran > 0;
 
         if (!hasData) {
@@ -464,7 +513,8 @@ async function updateChart() {
             labels: ['Pemasukan', 'Pengeluaran'],
             datasets: [{
                 label: 'Jumlah (Rp)',
-                data: [pemasukan, pengeluaran],
+                // Gunakan data yang sudah difilter dari ringkasan
+                data: [pemasukan, pengeluaran], 
                 backgroundColor: ['#3B82F6', '#EF4444'],
                 borderColor: ['#2563EB', '#DC2626'],
                 borderWidth: 2
