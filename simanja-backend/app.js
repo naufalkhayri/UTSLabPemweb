@@ -22,7 +22,7 @@ app.use(cors({
     'file://', 
     'null',
     // DOMAIN FRONT-END VERCEL ANDA
-    'https://simanjafrontend4.vercel.app' 
+    'https://simanja-frontend.vercel.app' 
   ],
   credentials: true,
 }));
