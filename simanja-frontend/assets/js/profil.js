@@ -1,3 +1,4 @@
+const BASE_URL = 'https://simanjabackend-qli5.vercel.app';
 // 📋 Inisialisasi Data Profil
 let userData = {};
 
@@ -21,10 +22,11 @@ async function loadProfileData() {
         }
 
         // Ambil data terbaru dari API
-        const response = await fetch('http://localhost:3000/api/users/profile', {
+        const response = await fetch(`${BASE_URL}/api/users/profile`, {
             method: 'GET',
             headers: {
-                'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
             }
         });
 
@@ -35,7 +37,7 @@ async function loadProfileData() {
 
         const data = await response.json();
         
-        if (data.success && data.user) {
+        if (data.user) {
             userData = data.user;
             localStorage.setItem('user', JSON.stringify(userData));
             displayProfileData();
@@ -68,7 +70,7 @@ function displayProfileData() {
 
     console.log('📊 Displaying profile data:', userData);
 
-    // Data Header
+    // Data Header - SESUAIKAN DENGAN FIELD BACKEND
     document.getElementById('nama_pengguna').textContent = userData.namaLengkap || userData.nama_lengkap || 'Nama Pengguna';
     document.getElementById('gender').textContent = userData.jenisKelamin || userData.jenis_kelamin || '-';
 
@@ -85,7 +87,7 @@ function displayProfileData() {
     // Load foto profil jika ada
     if (userData.fotoProfil || userData.foto_profil) {
         const fotoUrl = userData.fotoProfil || userData.foto_profil;
-        document.getElementById('foto_profil').src = `http://localhost:3000${fotoUrl}`;
+        document.getElementById('foto_profil').src = fotoUrl;
     }
 
     console.log('✅ UI updated with profile data');
@@ -129,7 +131,7 @@ function formatDateForInput(dateString) {
 function bukaModal() {
     console.log('🔓 Opening edit modal...');
     
-    // Isi form dengan data terkini dari userData
+    // Isi form dengan data terkini dari userData - SESUAIKAN DENGAN FIELD
     document.getElementById('edit_nama').value = userData.namaLengkap || userData.nama_lengkap || '';
     document.getElementById('edit_email').value = userData.email || '';
     document.getElementById('edit_handphone').value = userData.nomorHP || userData.nomor_hp || '';
@@ -165,6 +167,7 @@ async function handleFormSubmit(e) {
         submitBtn.textContent = 'Menyimpan...';
         submitBtn.disabled = true;
 
+        // SESUAIKAN DENGAN FIELD BACKEND
         const formData = {
             namaLengkap: document.getElementById('edit_nama').value.trim(),
             email: document.getElementById('edit_email').value.trim(),
@@ -184,7 +187,7 @@ async function handleFormSubmit(e) {
             throw new Error('Email harus diisi');
         }
 
-        const response = await fetch('http://localhost:3000/api/users/profile', {
+        const response = await fetch(`${BASE_URL}/api/users/profile`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -195,11 +198,17 @@ async function handleFormSubmit(e) {
 
         const data = await response.json();
 
-        if (response.ok && data.success) {
+        if (response.ok) {
             console.log('✅ Profile updated successfully:', data);
             
             // Update local user data
             userData = { ...userData, ...formData };
+            
+            // Update juga data di response jika ada
+            if (data.user) {
+                userData = data.user;
+            }
+            
             localStorage.setItem('user', JSON.stringify(userData));
             
             // Update UI dengan data baru
@@ -208,7 +217,7 @@ async function handleFormSubmit(e) {
             tutupModal();
             showNotification('Profil berhasil diperbarui!', 'success');
         } else {
-            throw new Error(data.error || data.details || 'Gagal memperbarui profil');
+            throw new Error(data.error || 'Gagal memperbarui profil');
         }
         
     } catch (error) {
@@ -216,7 +225,7 @@ async function handleFormSubmit(e) {
         showNotification('Gagal memperbarui profil: ' + error.message, 'error');
     } finally {
         // Reset button state
-        submitBtn.textContent = originalText;
+        submitBtn.textContent = 'Simpan Perubahan';
         submitBtn.disabled = false;
     }
 }
@@ -250,9 +259,9 @@ function setupPhotoUpload() {
             console.log('🖼️ Uploading profile photo...');
             const token = localStorage.getItem('token');
             const formData = new FormData();
-            formData.append('fotoProfil', file);
+            formData.append('fotoProfil', file); // SESUAI DENGAN FIELD BACKEND
 
-            const response = await fetch('http://localhost:3000/api/users/profile/photo', {
+            const response = await fetch(`${BASE_URL}/api/users/profile/photo`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -262,18 +271,18 @@ function setupPhotoUpload() {
 
             const data = await response.json();
 
-            if (response.ok && data.success) {
+            if (response.ok) {
                 console.log('✅ Photo uploaded successfully:', data);
                 
                 if (data.user && data.user.fotoProfil) {
-                    fotoProfil.src = `http://localhost:3000${data.user.fotoProfil}`;
+                    fotoProfil.src = data.user.fotoProfil;
                     userData.fotoProfil = data.user.fotoProfil;
                     localStorage.setItem('user', JSON.stringify(userData));
                 }
                 
                 showNotification('Foto profil berhasil diubah!', 'success');
             } else {
-                throw new Error(data.error || data.details || 'Gagal mengupload foto');
+                throw new Error(data.error || 'Gagal mengupload foto');
             }
 
         } catch (error) {
@@ -314,24 +323,6 @@ function hidePasswordErrors() {
     });
 }
 
-// Validasi real-time untuk form ubah password
-function setupPasswordValidation() {
-    const passwordBaruInput = document.getElementById('password_baru');
-    const konfirmasiInput = document.getElementById('konfirmasi_password');
-
-    if (passwordBaruInput) {
-        passwordBaruInput.addEventListener('blur', function() {
-            validatePasswordBaru();
-        });
-    }
-
-    if (konfirmasiInput) {
-        konfirmasiInput.addEventListener('blur', function() {
-            validateKonfirmasiPassword();
-        });
-    }
-}
-
 // Handle form submission ubah password
 async function handleUbahPasswordSubmit(e) {
     e.preventDefault();
@@ -353,48 +344,47 @@ async function handleUbahPasswordSubmit(e) {
         submitBtn.disabled = true;
 
         const formData = {
-            passwordLama: document.getElementById('password_lama').value,
-            passwordBaru: document.getElementById('password_baru').value,
+            oldPassword: document.getElementById('password_lama').value,
+            newPassword: document.getElementById('password_baru').value,
             konfirmasiPassword: document.getElementById('konfirmasi_password').value
         };
 
         console.log('🔍 Sending password change data...');
 
         // Validasi form
-        if (!formData.passwordLama) {
+        if (!formData.oldPassword) {
             document.getElementById('passwordLamaError').textContent = 'Password lama harus diisi';
             document.getElementById('passwordLamaError').classList.remove('hidden');
             throw new Error('Password lama harus diisi');
         }
 
-        const isPasswordBaruValid = validatePasswordBaru();
-        const isKonfirmasiValid = validateKonfirmasiPassword();
-
-        if (!isPasswordBaruValid || !isKonfirmasiValid) {
-            throw new Error('Harap perbaiki error di atas');
+        if (formData.newPassword.length < 6) {
+            document.getElementById('passwordBaruError').textContent = 'Password minimal 6 karakter';
+            document.getElementById('passwordBaruError').classList.remove('hidden');
+            throw new Error('Password minimal 6 karakter');
         }
 
-        if (formData.passwordBaru !== formData.konfirmasiPassword) {
+        if (formData.newPassword !== formData.konfirmasiPassword) {
             document.getElementById('konfirmasiPasswordError').textContent = 'Konfirmasi password tidak cocok';
             document.getElementById('konfirmasiPasswordError').classList.remove('hidden');
             throw new Error('Konfirmasi password tidak cocok');
         }
 
-        const response = await fetch('http://localhost:3000/api/users/change-password', {
+        const response = await fetch(`${BASE_URL}/api/users/change-password`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({
-                oldPassword: formData.passwordLama,
-                newPassword: formData.passwordBaru
+                oldPassword: formData.oldPassword,
+                newPassword: formData.newPassword
             })
         });
 
         const data = await response.json();
 
-        if (response.ok && data.success) {
+        if (response.ok) {
             console.log('✅ Password changed successfully');
             
             tutupModalUbahPassword();
@@ -403,7 +393,7 @@ async function handleUbahPasswordSubmit(e) {
             // Clear form
             document.getElementById('form_ubah_password').reset();
         } else {
-            throw new Error(data.error || data.details || 'Gagal mengubah password');
+            throw new Error(data.error || 'Gagal mengubah password');
         }
         
     } catch (error) {
@@ -420,36 +410,6 @@ async function handleUbahPasswordSubmit(e) {
         // Reset button state
         submitBtn.textContent = 'Ubah Password';
         submitBtn.disabled = false;
-    }
-}
-
-// Validasi helper functions
-function validatePasswordBaru() {
-    const passwordBaru = document.getElementById('password_baru').value;
-    const errorElement = document.getElementById('passwordBaruError');
-    
-    if (passwordBaru.length < 6) {
-        errorElement.textContent = 'Password minimal 6 karakter';
-        errorElement.classList.remove('hidden');
-        return false;
-    } else {
-        errorElement.classList.add('hidden');
-        return true;
-    }
-}
-
-function validateKonfirmasiPassword() {
-    const passwordBaru = document.getElementById('password_baru').value;
-    const konfirmasi = document.getElementById('konfirmasi_password').value;
-    const errorElement = document.getElementById('konfirmasiPasswordError');
-    
-    if (konfirmasi !== passwordBaru) {
-        errorElement.textContent = 'Konfirmasi password tidak cocok';
-        errorElement.classList.remove('hidden');
-        return false;
-    } else {
-        errorElement.classList.add('hidden');
-        return true;
     }
 }
 
@@ -605,9 +565,6 @@ function setupEventListeners() {
 
     // Setup photo upload
     setupPhotoUpload();
-    
-    // Setup password validation
-    setupPasswordValidation();
 }
 
 // 🚀 Initialize Application
@@ -635,4 +592,5 @@ document.addEventListener('DOMContentLoaded', function() {
     loadProfileData();
     
     console.log('✅ Profile page initialized');
+
 });
